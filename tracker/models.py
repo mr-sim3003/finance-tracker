@@ -13,8 +13,9 @@ class Category(models.Model):
     )
 
     class Meta:
-        verbose_name = "Category"
-        verbose_name_plural = "Categories"
+        #Названия таблицы, поля фильтрации, индексы.
+        verbose_name = "Category" #Название таблицы
+        verbose_name_plural = "Categories" #Название таблицы
         # Шов: уникальность категории для конкретного пользователя
         constraints = [
             models.UniqueConstraint(fields=['owner', 'name'], name='unique_category_per_user')
@@ -64,8 +65,9 @@ class Transaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Transaction"
-        verbose_name_plural = "Transactions"
+        #Названия таблицы, поля фильтрации, индексы.
+        verbose_name = "Transaction"  # Название таблицы
+        verbose_name_plural = "Transactions" # Название таблицы
         ordering = ['-date', '-created_at'] # По умолчанию: сначала новые
 
     def __str__(self):
