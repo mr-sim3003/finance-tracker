@@ -82,3 +82,16 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+
+CELERY_BROKER_URL = 'redis://redis:6379/0'                # --- Celery ---  # адрес Redis, где Celery будет хранить очередь задач. redis:6379 — это имя сервиса из docker-compose.yml.
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'              # где хранить результаты выполнения задач (тоже Redis).
+CELERY_ACCEPT_CONTENT = ['json']                     #CELERY_ACCEPT_CONTENT и сериализаторы — говорим Celery использовать JSON (безопаснее и читаемее, чем pickle).
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'                   #часовой пояс для планировщика (если будем использовать Celery Beat).
+
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
