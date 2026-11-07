@@ -64,11 +64,61 @@ def add_transaction(request):
     if request.method == 'POST':
         form = TransactionForm(request.POST, user=request.user)                # Передаем user
         if form.is_valid():
-            transaction = form.save(commit=False)                              # Пока не сохраняем
+            transaction = form.save(commit=False)                              # form.save(commit=False) — мы не сохраняем сразу, потому что нам нужно добавить owner (владельца). Без commit=False Django попытался бы сохранить транзакцию без владельца и выдал бы ошибку.
             transaction.owner = request.user                                # Привязываем владельца
             transaction.save()                                           # Сохраняем
-            return redirect('transaction_list')                            # Перенаправляем на список
+            return redirect('transaction_list')                            # после успешного сохранения перенаправляем на список транзакций (чтобы не было повторной отправки формы при обновлении страницы).
     else:
         form = TransactionForm(user=request.user)
 
     return render(request, 'tracker/add_transaction.html', {'form': form})
+
+import csv
+from datetime import datetime
+from io import TextIOWrapper
+
+from django.contrib import messages
+
+from .forms import CSVUploadForm
+
+
+@login_required
+def upload_csv(request):
+    if request.method == 'POST':
+        form = CSVUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            csv_file = request.FILES['file']  
+            if not csv_file.name.endswith('.csv'):                                  # Проверка на расширение
+                messages.error(request, 'Файл должен быть в формате CSV.')
+                return redirect('upload_csv')                      
+            try:                                                             # Читаем файл. TextIOWrapper нужен для правильной работы с кодировкой (UTF-8)
+                data_set = TextIOWrapper(csv_file.file, encoding='utf-8')    # Django загружает файл как байты. Мы оборачиваем его в текстовый поток с кодировкой UTF-8, чтобы csv мог читать русские буквы.
+                reader = csv.DictReader(data_set)                            # csv.DictReader: Это магия Python. Он берет первую строку (type,amount,category...) и делает её ключами словаря. Теперь к данным можно обращаться по имени (row['amount']), а не по индексу (row[1]).
+                created_count = 0
+                for row in reader:                                           # Пытаемся найти категорию по имени (только для текущего пользователя)                 
+                    category_name = row.get('category', '').strip()                        # сли в CSV указана категория «Еда», а у тебя её нет, скрипт сам создаст её. Это удобно.
+                    category = Category.objects.filter(owner=request.user, name=category_name).first()                  
+                    if not category:                                                                       # Если категории нет, создаем её                       
+                        category = Category.objects.create(owner=request.user, name=category_name)                   
+                    try:                                                                                   # Парсим дату (ожидаем формат YYYY-MM-DD)
+                        date_obj = datetime.strptime(row['date'], '%Y-%m-%d').date()
+                    except (ValueError, KeyError):
+                        date_obj = datetime.now().date()                   
+                    Transaction.objects.create(                                  # Создаем транзакцию
+                        owner=request.user,
+                        type=row['type'],
+                        amount=row['amount'],
+                        category=category,
+                        date=date_obj,
+                        description=row.get('description', '')
+                    )
+                    created_count += 1               
+                messages.success(request, f'Успешно загружено {created_count} транзакций.')
+                return redirect('transaction_list')                
+            except Exception as e:
+                messages.error(request, f'Ошибка при чтении файла: {e}')
+                return redirect('upload_csv')
+    else:
+        form = CSVUploadForm()
+
+    return render(request, 'tracker/upload_csv.html', {'form': form})

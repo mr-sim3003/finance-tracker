@@ -12,9 +12,9 @@ class TransactionForm(forms.ModelForm):
             'description': forms.TextInput(attrs={'placeholder': 'Необязательно'}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):                          # __init__ — это ключевой момент. Мы передаем user в форму (из View), чтобы показать только его категории. Иначе он увидел бы категории других пользователей.
         self.user = kwargs.pop('user', None)                                                # <--- Забираем пользователя из аргументов
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)                                  # widgets — мы говорим Django, что date должно быть полем с календарем (type="date"), а description — текстовым полем с подсказкой.
         
         if self.user:
             self.fields['category'].queryset = Category.objects.filter(owner=self.user)    # Показываем только категории текущего пользователя
@@ -24,3 +24,6 @@ class TransactionForm(forms.ModelForm):
         if amount and amount <= 0:
             raise forms.ValidationError("Сумма должна быть больше нуля.")
         return amount
+
+class CSVUploadForm(forms.Form):
+    file = forms.FileField(label="Выберите CSV-файл")
