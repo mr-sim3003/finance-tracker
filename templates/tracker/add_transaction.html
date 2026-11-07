@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить транзакцию</title>
+</head>
+<body>
+    <h1>Новая транзакция</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} <!-- Рендерит все поля формы -->
+        <button type="submit">Сохранить</button>
+    </form>
+    <a href="{% url 'transaction_list' %}">К списку транзакций</a>
+</body>
+</html>
