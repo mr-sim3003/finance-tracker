@@ -30,10 +30,7 @@ jobs:
         ruff check .
 
     - name: Run Tests                                 # — запускает pytest 
-      env:                                            # передаем переменные окружения (SECRET_KEY, DATABASE_URL) потому что в CI нет твоего .env.
-        SECRET_KEY: 'django-insecure-test-key-for-ci'   
-        DEBUG: 'True'
-        DATABASE_URL: 'sqlite:///db.sqlite3'          # Мы используем SQLite, чтобы не поднимать PostgreSQL в CI (это быстрее и проще для тестов).
-        DJANGO_SETTINGS_MODULE: 'config.settings.local'
+      env:                                            # передаем переменные окружения (SECRET_KEY, DATABASE_URL) потому что в CI нет твоего .env.                                  
+        DJANGO_SETTINGS_MODULE: 'config.settings.test'    # Мы используем SQLite, чтобы не поднимать PostgreSQL в CI (это быстрее и проще для тестов).
       run: |
-        SECRET_KEY="test-secret-key-for-ci" pytest
+        pytest
