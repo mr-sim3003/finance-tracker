@@ -1,0 +1,38 @@
+name: Django CI                         #  — название workflow (будет видно на GitHub)
+
+on:                                     # on: push/pull_request — триггеры. GitHub Actions будет запускаться каждый раз, ->
+  push:                                 # когда ты пушишь в main или создаешь Pull Request
+    branches: [ "main" ]                # Запускать при пуше в main
+  pull_request:
+    branches: [ "main" ]                      # Запускать при создании Pull Request в main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest                # GitHub поднимает виртуальную машину с Ubuntu  ( Linux Mint).
+                                          
+    steps:
+    - name: Checkout code                 # — скачивает твой код из репозитория.
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5       # — устанавливает Python 3.12.
+      with:
+        python-version: '3.12'
+
+    - name: Install Dependencies          # устанавливает библиотеки из requirements.txt.
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Ruff (Linter)                      # запускает линтер. Если в коде есть ошибки стиля ->
+      run: |                                       # (например, неиспользуемые импорты), CI упадет.
+        pip install ruff
+        ruff check .
+
+    - name: Run Tests                                 # — запускает pytest 
+      env:                                            # передаем переменные окружения (SECRET_KEY, DATABASE_URL) потому что в CI нет твоего .env.
+        SECRET_KEY: 'django-insecure-test-key-for-ci'   
+        DEBUG: 'True'
+        DATABASE_URL: 'sqlite:///db.sqlite3'          # Мы используем SQLite, чтобы не поднимать PostgreSQL в CI (это быстрее и проще для тестов).
+      run: |
+        pytest
