@@ -86,14 +86,17 @@ from .forms import CSVUploadForm
 #def upload_csv(request):
 #    if request.method == 'POST':
 #        form = CSVUploadForm(request.POST, request.FILES)
+
 #        if form.is_valid():
 #            csv_file = request.FILES['file']  
 #            if not csv_file.name.endswith('.csv'):                                  # Проверка на расширение
+
 #                messages.error(request, 'Файл должен быть в формате CSV.')
 #                return redirect('upload_csv')                      
 #            try:                                                             # Читаем файл. TextIOWrapper нужен для правильной работы с кодировкой (UTF-8)
 #                data_set = TextIOWrapper(csv_file.file, encoding='utf-8')    # Django загружает файл как байты. Мы оборачиваем его в текстовый поток с кодировкой UTF-8, чтобы csv мог читать русские буквы.
 #                reader = csv.DictReader(data_set)                            # csv.DictReader: Это магия Python. Он берет первую строку (type,amount,category...) и делает её ключами словаря. Теперь к данным можно обращаться по имени (row['amount']), а не по индексу (row[1]).
+
 #                created_count = 0
 #                for row in reader:                                           # Пытаемся найти категорию по имени (только для текущего пользователя)                 
 #                    category_name = row.get('category', '').strip()                        # сли в CSV указана категория «Еда», а у тебя её нет, скрипт сам создаст её. Это удобно.
@@ -103,7 +106,8 @@ from .forms import CSVUploadForm
 #                    try:                                                                                   # Парсим дату (ожидаем формат YYYY-MM-DD)
 #                        date_obj = datetime.strptime(row['date'], '%Y-%m-%d').date()
 #                    except (ValueError, KeyError):
-#                        date_obj = datetime.now().date()                   
+#                        date_obj = datetime.now().date()       
+
 #                    Transaction.objects.create(                                  # Создаем транзакцию
 #                        owner=request.user,
 #                        type=row['type'],
@@ -112,7 +116,8 @@ from .forms import CSVUploadForm
 #                        date=date_obj,
 #                        description=row.get('description', '')
 #                    )
-#                    created_count += 1               
+#                    created_count += 1        
+       
 #                messages.success(request, f'Успешно загружено {created_count} транзакций.')
 #                return redirect('transaction_list')                
 #            except Exception as e:

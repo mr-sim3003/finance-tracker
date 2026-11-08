@@ -58,7 +58,12 @@ class Transaction(models.Model):
         verbose_name = "Transaction"                              # Название таблицы
         verbose_name_plural = "Transactions"                      # Название таблицы
         ordering = ['-date', '-created_at']                       # По умолчанию: сначала новые  # noqa: RUF012
-
+        constraints = [                                            #  Защита от дублей при импорте
+            models.UniqueConstraint(
+                fields=['owner', 'date', 'amount', 'type', 'description'],
+                name='unique_transaction_per_user'
+            )
+        ]
     def __str__(self):
         return f"{self.get_type_display()} {self.amount} ({self.date})"
 
