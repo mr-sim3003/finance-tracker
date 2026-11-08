@@ -36,4 +36,4 @@ jobs:
         DATABASE_URL: 'sqlite:///db.sqlite3'          # Мы используем SQLite, чтобы не поднимать PostgreSQL в CI (это быстрее и проще для тестов).
         DJANGO_SETTINGS_MODULE: 'config.settings.local'
       run: |
-        pytest
+        SECRET_KEY="test-secret-key-for-ci" pytest
