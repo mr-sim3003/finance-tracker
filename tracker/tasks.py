@@ -1,11 +1,13 @@
+import csv
+from datetime import datetime
+from io import TextIOWrapper
+
 from celery import shared_task
 from django.contrib.auth import get_user_model
-from .models import Transaction, Category
-import csv
-from io import TextIOWrapper
-from datetime import datetime
 from django.core.files.storage import default_storage
 from django.db import IntegrityError
+
+from .models import Category, Transaction
 
 User = get_user_model()
 
@@ -45,5 +47,5 @@ def import_csv_task(user_id, file_path):
             default_storage.delete(file_path) # # Удаляем файл после обработки, чтобы не засорять диск
             return f'Успешно загружено: {created_count}. Пропущено дублей: {skipped_count}.'
             
-    except Exception as e:
+    except (ValueError, KeyError, IntegrityError) as e:
         return f'Ошибка: {e}'

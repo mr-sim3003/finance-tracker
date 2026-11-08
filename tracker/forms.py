@@ -6,8 +6,8 @@ from .models import Category, Transaction
 class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ['type', 'amount', 'category', 'date', 'description']                   # noqa: RUF012
-        widgets = {                                                                      # noqa: RUF012
+        fields = ['type', 'amount', 'category', 'date', 'description']
+        widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.TextInput(attrs={'placeholder': 'Необязательно'}),
         }

@@ -8,10 +8,11 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
 import os
-                                                            # Импорт модуля os. Он нужен, чтобы работать с переменными окружения 
-                                                            # (например, сказать Django, какой файл настроек использовать).
 
+# Импорт модуля os. Он нужен, чтобы работать с переменными окружения 
+# (например, сказать Django, какой файл настроек использовать).
 from django.core.wsgi import get_wsgi_application
+
                                                             #Эта функция  которая создает WSGI-приложение. Именно её Gunicorn будет вызывать для каждого запроса.
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')

@@ -15,7 +15,7 @@ class Category(models.Model):
     class Meta:                                    # Названия таблицы, поля фильтрации, индексы. Hастройки модели, которые не создают колонок в БД.
         verbose_name = "Category"                  # как модель называется в админке (в единственном и множественном числе).
         verbose_name_plural = "Categories"         # как модель называется в админке (в единственном и множественном числе).
-        constraints = [                                                                         # Это шов на уровне БД. UniqueConstraint запрещает дубликаты.  # noqa: RUF012
+        constraints = [                                                                         # Это шов на уровне БД. UniqueConstraint запрещает дубликаты.
             models.UniqueConstraint(fields=['owner', 'name'], name='unique_category_per_user')  # Но не просто «уникальное имя», а уникальная пара (owner + name). 
         ]                                                                                       # То есть у одного пользователя не может быть двух категорий «Food», но у разных пользователей — может.
 
@@ -24,7 +24,7 @@ class Category(models.Model):
 
 
 class Transaction(models.Model):              
-    TYPE_CHOICES = [                            # чтобы ограничить возможные значения (только income или expense).  # noqa: RUF012
+    TYPE_CHOICES = [                            # чтобы ограничить возможные значения (только income или expense).
         ('income', 'Income'),                   # Константа TYPE_CHOICES — список кортежей. Она нужна для поля type, 
         ('expense', 'Expense'),
     ]
@@ -57,7 +57,7 @@ class Transaction(models.Model):
     class Meta:                                                   #Названия таблицы, поля фильтрации, индексы.
         verbose_name = "Transaction"                              # Название таблицы
         verbose_name_plural = "Transactions"                      # Название таблицы
-        ordering = ['-date', '-created_at']                       # По умолчанию: сначала новые  # noqa: RUF012
+        ordering = ['-date', '-created_at']                       # По умолчанию: сначала новые
         constraints = [                                            #  Защита от дублей при импорте
             models.UniqueConstraint(
                 fields=['owner', 'date', 'amount', 'type', 'description'],

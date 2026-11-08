@@ -7,7 +7,7 @@ from .serializers import CategorySerializer, TransactionSerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):                 # дает ему «из коробки» методы для CRUD-операций (создание, чтение, обновление, удаление) над категориями.
     serializer_class = CategorySerializer                      # Указывает, какой сериализатор использовать (CategorySerializer). 
-    permission_classes = [IsAuthenticated]                     # Только для авторизованных  # noqa: RUF012
+    permission_classes = [IsAuthenticated]                     # Только для авторизованных
 
     def get_queryset(self):                                     # Метод get_queryset определяет, какие данные будут доступны для чтения (GET).
         return Category.objects.filter(owner=self.request.user) #функции срабатывают когда обращаються к их функционалу       
@@ -24,7 +24,7 @@ class CategoryViewSet(viewsets.ModelViewSet):                 # дает ему 
 
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
-    permission_classes = [IsAuthenticated]                               # Только для авторизованных  # noqa: RUF012
+    permission_classes = [IsAuthenticated]                               # Только для авторизованных
 
     def get_queryset(self):                                             # Фильтрация транзакций по текущему пользователю. 
         return Transaction.objects.filter(owner=self.request.user)      #Это критически важно для финансового трекера (утечка данных недопустима).
@@ -56,7 +56,6 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
 from .forms import TransactionForm
-from .models import Transaction
 
 
 @login_required
@@ -73,30 +72,21 @@ def add_transaction(request):
 
     return render(request, 'tracker/add_transaction.html', {'form': form})
 
-import csv
-from datetime import datetime
-from io import TextIOWrapper
 
 from django.contrib import messages
-
-from .forms import CSVUploadForm
-
 
 #@login_required
 #def upload_csv(request):
 #    if request.method == 'POST':
 #        form = CSVUploadForm(request.POST, request.FILES)
-
 #        if form.is_valid():
 #            csv_file = request.FILES['file']  
 #            if not csv_file.name.endswith('.csv'):                                  # Проверка на расширение
-
 #                messages.error(request, 'Файл должен быть в формате CSV.')
 #                return redirect('upload_csv')                      
 #            try:                                                             # Читаем файл. TextIOWrapper нужен для правильной работы с кодировкой (UTF-8)
 #                data_set = TextIOWrapper(csv_file.file, encoding='utf-8')    # Django загружает файл как байты. Мы оборачиваем его в текстовый поток с кодировкой UTF-8, чтобы csv мог читать русские буквы.
 #                reader = csv.DictReader(data_set)                            # csv.DictReader: Это магия Python. Он берет первую строку (type,amount,category...) и делает её ключами словаря. Теперь к данным можно обращаться по имени (row['amount']), а не по индексу (row[1]).
-
 #                created_count = 0
 #                for row in reader:                                           # Пытаемся найти категорию по имени (только для текущего пользователя)                 
 #                    category_name = row.get('category', '').strip()                        # сли в CSV указана категория «Еда», а у тебя её нет, скрипт сам создаст её. Это удобно.
@@ -107,7 +97,6 @@ from .forms import CSVUploadForm
 #                        date_obj = datetime.strptime(row['date'], '%Y-%m-%d').date()
 #                    except (ValueError, KeyError):
 #                        date_obj = datetime.now().date()       
-
 #                    Transaction.objects.create(                                  # Создаем транзакцию
 #                        owner=request.user,
 #                        type=row['type'],
@@ -117,7 +106,6 @@ from .forms import CSVUploadForm
 #                        description=row.get('description', '')
 #                    )
 #                    created_count += 1        
-       
 #                messages.success(request, f'Успешно загружено {created_count} транзакций.')
 #                return redirect('transaction_list')                
 #            except Exception as e:
@@ -127,11 +115,11 @@ from .forms import CSVUploadForm
 #        form = CSVUploadForm()
 #
 #    return render(request, 'tracker/upload_csv.html', {'form': form})
-
-
 from django.core.files.storage import default_storage
 
+from .forms import CSVUploadForm
 from .tasks import import_csv_task
+
 
 @login_required
 def upload_csv(request):

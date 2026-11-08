@@ -55,7 +55,7 @@ def test_user_sees_only_own_transactions(api_client, user):
     cat2 = Category.objects.create(name="Transport", owner=user2)
     
     t1 = Transaction.objects.create(type='income', amount=100, category=cat1, owner=user, date='2026-11-02')
-    t2 = Transaction.objects.create(type='expense', amount=50, category=cat2, owner=user2, date='2026-11-02')
+    Transaction.objects.create(type='expense', amount=50, category=cat2, owner=user2, date='2026-11-02')
     
                                                                                             # Логинимся под ПЕРВЫМ пользователем
     api_client.force_authenticate(user=user)
