@@ -35,10 +35,9 @@ Finance Tracker — это веб-приложение для учета лич�
 git clone https://github.com/mr-sim3003/finance-tracker.git
 cd finance-tracker
 
-Создайте файл .env в корне проекта на основе .env.example:
-bash
-
-cp .env.example .env
+Создайте файл `.env` в корне проекта на основе `.env.example`:
+   ```bash
+   cp .env.example .env
 
 (Убедитесь, что в .env указаны корректные SECRET_KEY, DATABASE_URL и ALLOWED_HOSTS).
 
