@@ -62,10 +62,14 @@ docker compose exec web python manage.py createsuperuser
 
 Проект покрыт тестами (API, валидация, идемпотентность импорта).
 
-Запуск тестов:
+Запуск тестов внутри контейнера:
 ```bash
 
 docker compose exec web pytest
+```
+без контенера
+```bash
+pytest
 ```
 📁 Структура проекта
 text
