@@ -1,12 +1,4 @@
 # finance-tracker
-
-```bash
-git clone https://github.com/mr-sim3003/finance-tracker.git
-cd finance-tracker
-```
-
-
-
 Finance Tracker — это веб-приложение для учета личных доходов и расходов. Проект позволяет добавлять транзакции вручную, импортировать выписки из банка в формате CSV (с защитой от дубликатов) и просматривать историю операций.
 
 🔗 Живая демонстрация: [http://194.113.35.11/](http://194.113.35.11/)
@@ -38,32 +30,32 @@ Finance Tracker — это веб-приложение для учета лич�
 Для запуска вам понадобятся Docker и Docker Compose.
 
     Клонируйте репозиторий:
-    bash
+```bash
 
 git clone https://github.com/mr-sim3003/finance-tracker.git
 cd finance-tracker
-
+```
 Создайте файл `.env` в корне проекта на основе `.env.example`:
-   ```bash
+```bash
    cp .env.example .env
-
+```
 (Убедитесь, что в .env указаны корректные SECRET_KEY, DATABASE_URL и ALLOWED_HOSTS).
 
 Запустите контейнеры:
-bash
+```bash
 
 docker compose up -d --build
-
+```
 Примените миграции:
-bash
+```bash
 
 docker compose exec web python manage.py migrate
-
+```
 Создайте суперпользователя (для доступа в админку):
-bash
+```bash
 
 docker compose exec web python manage.py createsuperuser
-
+```
     Приложение будет доступно по адресу: http://localhost/
 
 🧪 Тестирование
@@ -71,10 +63,10 @@ docker compose exec web python manage.py createsuperuser
 Проект покрыт тестами (API, валидация, идемпотентность импорта).
 
 Запуск тестов:
-bash
+```bash
 
 docker compose exec web pytest
-
+```
 📁 Структура проекта
 text
 
