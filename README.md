@@ -72,7 +72,6 @@ docker compose exec web pytest
 pytest
 ```
 📁 Структура проекта
-text
 ```bach
 .
 ├── accounts/         # Кастомная модель пользователя (CustomUser)
@@ -84,6 +83,6 @@ text
 ├── Dockerfile
 └── requirements.txt
 ```
-📝 Лицензия
 
+📝 Лицензия
 Проект создан в учебных целях.
