@@ -56,7 +56,7 @@ docker compose exec web python manage.py migrate
 
 docker compose exec web python manage.py createsuperuser
 ```
-    Приложение будет доступно по адресу: [http://localhost/](http://localhost/)
+Приложение будет доступно по адресу: [http://localhost/](http://localhost/)
 
 🧪 Тестирование
 
