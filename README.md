@@ -31,7 +31,6 @@ Finance Tracker — это веб-приложение для учета лич�
 
 Клонируйте репозиторий:
 ```bash
-
 git clone https://github.com/mr-sim3003/finance-tracker.git
 cd finance-tracker
 ```
@@ -43,17 +42,14 @@ cd finance-tracker
 
 Запустите контейнеры:
 ```bash
-
 docker compose up -d --build
 ```
 Примените миграции:
 ```bash
-
 docker compose exec web python manage.py migrate
 ```
 Создайте суперпользователя (для доступа в админку):
 ```bash
-
 docker compose exec web python manage.py createsuperuser
 ```
 Приложение будет доступно по адресу: [http://localhost/](http://localhost/)
@@ -64,7 +60,6 @@ docker compose exec web python manage.py createsuperuser
 
 Запуск тестов внутри контейнера:
 ```bash
-
 docker compose exec web pytest
 ```
 без контенера
