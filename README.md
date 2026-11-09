@@ -8,7 +8,7 @@ Finance Tracker — это веб-приложение для учета лич�
 
 2) База данных: PostgreSQL
 
-2) Асинхронность: Celery, Redis (для фоновой обработки CSV)
+3) Асинхронность: Celery, Redis (для фоновой обработки CSV)
 
 4) Инфраструктура: Docker, Docker Compose, Nginx, Gunicorn
 
