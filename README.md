@@ -72,7 +72,7 @@ docker compose exec web pytest
 pytest
 ```
 📁 Структура проекта
-```bach
+```text
 .
 ├── accounts/         # Кастомная модель пользователя (CustomUser)
 ├── config/           # Настройки Django (base, local, prod, test)
