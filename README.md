@@ -39,11 +39,7 @@ cd finance-tracker
    cp .env.example .env
 ```
 (Убедитесь, что в .env указаны корректные SECRET_KEY, DATABASE_URL и ALLOWED_HOSTS).
-
-Зпустите окружение находясь в директории finance-tracker
-```bash
-source venv/bin/activate
-```
+Для запуска тестов без Docker активируйте venv
 Запустите контейнеры:
 ```bash
 docker compose up -d --build
