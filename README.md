@@ -69,7 +69,7 @@ docker compose exec web pytest
 ```
 📁 Структура проекта
 text
-
+```bach
 .
 ├── accounts/         # Кастомная модель пользователя (CustomUser)
 ├── config/           # Настройки Django (base, local, prod, test)
@@ -79,7 +79,7 @@ text
 ├── docker-compose.yml
 ├── Dockerfile
 └── requirements.txt
-
+```
 📝 Лицензия
 
 Проект создан в учебных целях.
