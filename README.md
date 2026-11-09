@@ -40,6 +40,10 @@ cd finance-tracker
 ```
 (Убедитесь, что в .env указаны корректные SECRET_KEY, DATABASE_URL и ALLOWED_HOSTS).
 
+Зпустите окружение находясь в директории finance-tracker
+```bash
+source venv/bin/activate
+```
 Запустите контейнеры:
 ```bash
 docker compose up -d --build
@@ -62,7 +66,7 @@ docker compose exec web python manage.py createsuperuser
 ```bash
 docker compose exec web pytest
 ```
-без контенера
+без контейнера.
 ```bash
 pytest
 ```
