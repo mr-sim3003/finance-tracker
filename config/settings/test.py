@@ -1,5 +1,6 @@
-from .base import *
 import os
+
+from .base import *
 
 # Для тестов используем быструю SQLite в памяти
 DATABASES = {

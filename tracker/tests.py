@@ -106,7 +106,7 @@ def test_csv_import_is_idempotent(auth_client, user):
     response1 = auth_client.post('/upload-csv/', {'file': csv_file})                    #  Загружаем файл ПЕРВЫЙ.  проверяет, что импорт работает
     assert response1.status_code == 302  
     file_name = default_storage.save("test.csv", csv_file)
-    result = import_csv_task(user.id, file_name)                                                                           # Редирект после успеха
+    _ = import_csv_task(user.id, file_name)                                                                           # Редирект после успеха
     assert Transaction.objects.count() == 2                                           # Создалось 2 транзакции      
 
     csv_file_2 = SimpleUploadedFile(
