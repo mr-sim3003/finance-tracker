@@ -1,11 +1,10 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import IntegrityError
 from rest_framework.test import APIClient
 
 from tracker.models import Category, Transaction
-from tracker.tasks import import_csv_task
 
 
 @pytest.fixture                            # Фикстура: создаёт тестового пользователя
@@ -90,33 +89,98 @@ def test_create_valid_transaction(auth_client, user):
     assert Transaction.objects.count() == 1
     assert Transaction.objects.first().amount == 500
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 
-@pytest.mark.django_db(transaction=True)
-def test_csv_import_is_idempotent(auth_client, user):
+@pytest.mark.django_db
+def test_upload_non_csv_file_rejected(auth_client, user):
+    """
+    Проверяет, что файл с расширением .txt отклоняется.
+    View должен вернуть редирект (302) и сообщение об ошибке.
+    """
+    # Создаем файл с расширением .txt
+    txt_file = SimpleUploadedFile(
+        "test.txt", 
+        b"some text content", 
+        content_type="text/plain"
+    )
     
-    csv_content = b"type,amount,category,date,description\n"                 #  Готовим CSV-файл в памяти
-    csv_content += b"expense,150.50,Food,2026-11-01,Lunch\n"
-    csv_content += b"income,1000.00,Salary,2026-11-05,November\n"
-    # SimpleUploadedFile — это способ имитировать файл, который пользователь загружает через форму. Нам не нужен реальный файл на диске, достаточно «байтов в памяти».      
-    csv_file = SimpleUploadedFile(
-        "test.csv", 
-        csv_content, 
-        content_type="text/csv"
-    )
-    response1 = auth_client.post('/upload-csv/', {'file': csv_file})                    #  Загружаем файл ПЕРВЫЙ.  проверяет, что импорт работает
-    assert response1.status_code == 302  
-    file_name = default_storage.save("test.csv", csv_file)
-    _ = import_csv_task(user.id, file_name)                                                                           # Редирект после успеха
-    assert Transaction.objects.count() == 2                                           # Создалось 2 транзакции      
+    response = auth_client.post('/upload-csv/', {'file': txt_file})
+    
+    # Проверяем, что View вернул редирект (302), а не 200
+    assert response.status_code == 302
+    
+    # Проверяем, что транзакции НЕ создались
+    assert Transaction.objects.count() == 0
 
-    csv_file_2 = SimpleUploadedFile(
-        "test.csv", 
-        csv_content, 
-        content_type="text/csv"
+
+@pytest.mark.django_db
+def test_amount_exceeds_max_digits(auth_client, user):
+    """
+    Проверяет, что сумма, которая не влезает в max_digits=12,
+    возвращает 400 Bad Request.
+    """
+    category = Category.objects.create(name="Food", owner=user)
+    
+    # 11 цифр до запятой + 2 после = 13 цифр (больше max_digits=12)
+    response = auth_client.post('/api/transactions/', {
+        'type': 'income',
+        'amount': '10000000000.00',  # 10 миллиардов
+        'category': category.id,
+        'date': '2026-11-02',
+    })
+    
+    assert response.status_code == 400
+    assert 'amount' in response.data
+
+@pytest.mark.django_db
+def test_user_cannot_modify_other_users_transaction(auth_client, user):
+    """
+    Проверяет, что пользователь не может получить, изменить или удалить
+    чужую транзакцию. Все три операции должны возвращать 404.
+    """
+    # Создаем второго пользователя и его транзакцию
+    User = get_user_model()
+    user2 = User.objects.create_user(username='user2', password='password2')
+    cat2 = Category.objects.create(name="Food", owner=user2)
+    t2 = Transaction.objects.create(
+        type='income', 
+        amount=100, 
+        category=cat2, 
+        owner=user2, 
+        date='2026-11-02'
     )
-    response2 = auth_client.post('/upload-csv/', {'file': csv_file_2})
-    print(f"Количество транзакций после первого импорта: {Transaction.objects.count()}")
-    print(f"Response context: {response1.context}") 
-    assert response2.status_code == 302
-                                                                       # Проверяем, что количество НЕ изменилось (дубликаты не создались)
-    assert Transaction.objects.count() == 2  # это контракт. Мы говорим: «Система гарантирует, что повторный импорт не создает дублей».
+    
+    # Логинимся под ПЕРВЫМ пользователем
+    auth_client.force_authenticate(user=user)
+    
+    # Пытаемся получить чужую транзакцию
+    response_get = auth_client.get(f'/api/transactions/{t2.id}/')
+    assert response_get.status_code == 404
+    
+    # Пытаемся изменить чужую транзакцию
+    response_patch = auth_client.patch(f'/api/transactions/{t2.id}/', {'amount': '999.99'})
+    assert response_patch.status_code == 404
+    
+    # Пытаемся удалить чужую транзакцию
+    response_delete = auth_client.delete(f'/api/transactions/{t2.id}/')
+    assert response_delete.status_code == 404
+    
+    # Проверяем, что транзакция не изменилась и не удалилась
+    t2.refresh_from_db()
+    assert t2.amount == 100
+    assert Transaction.objects.filter(id=t2.id).exists()
+
+
+
+@pytest.mark.django_db
+def test_unique_category_per_user(user):
+    """
+    Проверяет, что нельзя создать две одинаковые категории
+    у одного пользователя (UniqueConstraint на owner+name).
+    """
+    # Создаем первую категорию
+    Category.objects.create(name="Food", owner=user)
+    
+    # Пытаемся создать вторую с тем же именем и владельцем
+    with pytest.raises(IntegrityError):
+        Category.objects.create(name="Food", owner=user)

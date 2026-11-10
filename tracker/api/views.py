@@ -13,7 +13,7 @@ class CategoryViewSet(viewsets.ModelViewSet):                 # дает ему 
     def get_queryset(self):                                     # Метод get_queryset определяет, какие данные будут доступны для чтения (GET).
         return Category.objects.filter(
             owner=self.request.user
-        ).select_related('category')  
+        ) 
                                                                 #функции срабатывают когда обращаються к их функционалу       
     def perform_create(self, serializer):                       # это шов безопасности. 
         serializer.save(owner=self.request.user)                # Он гарантирует, что пользователь увидит только свои категории, а не чужие. 
@@ -30,7 +30,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]                               # Только для авторизованных
 
     def get_queryset(self):                                             # Фильтрация транзакций по текущему пользователю. 
-        return Transaction.objects.filter(owner=self.request.user)      #Это критически важно для финансового трекера (утечка данных недопустима).
+        return Transaction.objects.filter(
+            owner=self.request.user
+            ).select_related('category')                             #Это критически важно для финансового трекера (утечка данных недопустима).
                                                                         #функции срабатывают когда обращаються к их функционалу
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)                         #функции срабатывают когда обращаються к их функционалу
