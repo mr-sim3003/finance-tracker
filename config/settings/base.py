@@ -97,3 +97,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CELERY_TASK_ALWAYS_EAGER = False
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]

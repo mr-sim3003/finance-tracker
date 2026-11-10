@@ -1,22 +1,29 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Мои транзакции</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h1>Мои транзакции</h1>
-    <a href="{% url 'add_transaction' %}">+ Добавить</a>
-    <a href="{% url 'upload_csv' %}">Импорт CSV</a>
-    <ul>
-        {% for t in transactions %}
-            <li>
-                {{ t.date }} — {{ t.get_type_display }} — {{ t.amount }} — {{ t.category.name }}
-                {% if t.description %} ({{ t.description }}) {% endif %}
-            </li>
-        {% empty %}
-            <li>Пока нет транзакций.</li>
-        {% endfor %}
-    </ul>
+    <div class="container">
+        <h1>Мои транзакции</h1>
+        <div style="margin-bottom: 20px;">
+            <a href="{% url 'add_transaction' %}" class="btn">+ Добавить</a>
+            <a href="{% url 'upload_csv' %}" class="btn">Импорт CSV</a>
+        </div>
+        <ul>
+            {% for t in transactions %}
+                <li>
+                    <strong>{{ t.date }}</strong> — {{ t.get_type_display }} — 
+                    {{ t.amount }} — {{ t.category.name }}
+                    {% if t.description %} ({{ t.description }}) {% endif %}
+                </li>
+            {% empty %}
+                <li>Пока нет транзакций.</li>
+            {% endfor %}
+        </ul>
+    </div>
 </body>
 </html>

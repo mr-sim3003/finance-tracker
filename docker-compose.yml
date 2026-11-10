@@ -34,9 +34,7 @@ services:                                             # Сейчас их три
       db:
         condition: service_healthy
     env_file:
-      - .env
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.prod                                               # читает переменные из файла .env (там SECRET_KEY, DEBUG, DATABASE_URL, ALLOWED_HOSTS). Это позволяет не хардкодить секреты в docker-compose.yml.
+      - .env                                               # читает переменные из файла .env (там SECRET_KEY, DEBUG, DATABASE_URL, ALLOWED_HOSTS). Это позволяет не хардкодить секреты в docker-compose.yml.
 
 
   nginx:                                               # имя сервиса.

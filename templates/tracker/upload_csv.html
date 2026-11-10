@@ -1,27 +1,31 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Импорт CSV</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h1>Импорт транзакций из CSV</h1>
+    <div class="container">
+        <h1>Импорт транзакций из CSV</h1>
 
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li style="color: {% if message.tags == 'error' %}red{% else %}green{% endif %};">
-                    {{ message }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Загрузить</button>
-    </form>
-    <a href="{% url 'transaction_list' %}">К списку транзакций</a>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Загрузить</button>
+        </form>
+        <p style="margin-top: 20px;">
+            <a href="{% url 'transaction_list' %}">← К списку транзакций</a>
+        </p>
+    </div>
 </body>
 </html>

@@ -1,16 +1,22 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Добавить транзакцию</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h1>Новая транзакция</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }} <!-- Рендерит все поля формы -->
-        <button type="submit">Сохранить</button>
-    </form>
-    <a href="{% url 'transaction_list' %}">К списку транзакций</a>
+    <div class="container">
+        <h1>Новая транзакция</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Сохранить</button>
+        </form>
+        <p style="margin-top: 20px;">
+            <a href="{% url 'transaction_list' %}">← К списку транзакций</a>
+        </p>
+    </div>
 </body>
 </html>
