@@ -33,8 +33,11 @@ services:                                             # Сейчас их три
     depends_on:                                               # Не запускай web, пока db не станет healthy». Это защита от падения Django при старте, когда база еще не готова принимать подключения.
       db:
         condition: service_healthy
-    env_file:                                               # читает переменные из файла .env (там SECRET_KEY, DEBUG, DATABASE_URL, ALLOWED_HOSTS). Это позволяет не хардкодить секреты в docker-compose.yml.
+    env_file:
       - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.prod                                               # читает переменные из файла .env (там SECRET_KEY, DEBUG, DATABASE_URL, ALLOWED_HOSTS). Это позволяет не хардкодить секреты в docker-compose.yml.
+
 
   nginx:                                               # имя сервиса.
     image: nginx:alpine                                                #скачивает официальный образ Nginx (на базе Alpine Linux — он очень легкий).
@@ -45,7 +48,7 @@ services:                                             # Сейчас их три
       - ./static:/app/static                                              # пробрасывает папку со статикой (если она есть) внутрь Nginx, чтобы он мог отдавать CSS/JS напрямую.
     depends_on:                                               # Nginx запустится после web (но здесь нет условия healthy, потому что Nginx не падает, если Django еще не готов — он просто будет отдавать ошибку 502, пока Django не поднимется).
       - web
- 
+
   celery: # # Команда для запуска воркера Celery
     build: .
     command: celery -A config worker --loglevel=info  # запускает воркер./ -A config — указывает на пакет config, где лежит celery.py./ worker — запускает процесс-исполнитель./ --loglevel=info — чтобы видеть в логах, как задачи берутся в работу.
