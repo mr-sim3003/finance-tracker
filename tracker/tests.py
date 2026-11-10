@@ -89,8 +89,6 @@ def test_create_valid_transaction(auth_client, user):
     assert Transaction.objects.count() == 1
     assert Transaction.objects.first().amount == 500
 
-from django.core.files.uploadedfile import SimpleUploadedFile
-
 @pytest.mark.django_db
 def test_upload_non_csv_file_rejected(auth_client, user):
     """
