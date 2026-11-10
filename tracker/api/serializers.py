@@ -1,6 +1,6 @@
 from rest_framework import serializers # предоставляет классы ModelSerializer, CharField, ValidationError.  # noqa: I001
 
-from .models import Category, Transaction
+from tracker.models import Category, Transaction
 
 
 class CategorySerializer(serializers.ModelSerializer):
