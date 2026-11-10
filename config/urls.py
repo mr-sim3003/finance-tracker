@@ -1,8 +1,9 @@
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from django.views.generic import ListView
 from rest_framework.routers import DefaultRouter
-from django.contrib.auth import views as auth_views
+
 from tracker.models import Transaction
 from tracker.views import (
     CategoryViewSet,
