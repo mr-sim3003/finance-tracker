@@ -67,9 +67,11 @@ def test_user_sees_only_own_transactions(api_client, user):
                                                                                             
     assert response.status_code == 200                                                # Проверяем, что вернулся 200 OK
                                                                                             
-    assert len(response.data) == 1                                                  # Проверяем, что в списке ТОЛЬКО 1 транзакция (t1)
+    assert response.data['count'] == 1                                      # Проверяем count в пагинации
+    assert len(response.data['results']) == 1                                           # Проверяем длину списка results
+    assert response.data['results'][0]['id'] == t1.id                                    # Проверяем ID в results                                         
                                                                                             
-    assert response.data[0]['id'] == t1.id                                           # Проверяем, что это именно транзакция t1, а не t2
+                                     
 
 
                                                                                        
