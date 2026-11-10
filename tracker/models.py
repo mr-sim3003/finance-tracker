@@ -57,7 +57,10 @@ class Transaction(models.Model):
     class Meta:                                                   #Названия таблицы, поля фильтрации, индексы.
         verbose_name = "Transaction"                              # Название таблицы
         verbose_name_plural = "Transactions"                      # Название таблицы
-        ordering = ['-date', '-created_at']                       # По умолчанию: сначала новые
+        ordering = ['-date', '-created_at']
+        indexes = [
+        models.Index(fields=['owner', 'date']),                    
+        ]                                                         # По умолчанию: сначала новые
         constraints = [                                            #  Защита от дублей при импорте
             models.UniqueConstraint(
                 fields=['owner', 'date', 'amount', 'type', 'description'],
