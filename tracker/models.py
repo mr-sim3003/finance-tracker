@@ -50,7 +50,7 @@ class Transaction(models.Model):
         related_name='transactions',
         verbose_name="Owner"
     )                                                                                      # Шов 4: owner через настройку, а не auth.User. Поле owner — FK на пользователя.
-    date = models.DateField(default=timezone.now, verbose_name="Date")
+    date = models.DateField(default=timezone.now, verbose_name="Date", db_index=True)
     description = models.CharField(max_length=255, blank=True, verbose_name="Description") # description — описание. blank=True означает, что поле необязательное (может быть пустым).
     created_at = models.DateTimeField(auto_now_add=True)
 
