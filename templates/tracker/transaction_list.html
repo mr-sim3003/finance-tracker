@@ -19,6 +19,11 @@
                     <strong>{{ t.date }}</strong> — {{ t.get_type_display }} — 
                     {{ t.amount }} — {{ t.category.name }}
                     {% if t.description %} ({{ t.description }}) {% endif %}
+                    
+                    <span style="float: right;">
+                        <a href="{% url 'transaction_edit' t.pk %}" style="margin-right: 10px;">✏️ Редактировать</a>
+                        <a href="{% url 'transaction_delete' t.pk %}" style="color: red;">🗑️ Удалить</a>
+                    </span>
                 </li>
             {% empty %}
                 <li>Пока нет транзакций.</li>

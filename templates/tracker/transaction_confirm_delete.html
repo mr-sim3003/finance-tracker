@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Удалить транзакцию</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Удаление транзакции</h1>
+        <p>Вы уверены, что хотите удалить транзакцию от <strong>{{ object.date }}</strong> на сумму <strong>{{ object.amount }}</strong> ({{ object.category.name }})?</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" style="background-color: #e74c3c; color: white; border: none; padding: 10px 20px; cursor: pointer;">Да, удалить</button>
+            <a href="{% url 'transaction_list' %}" style="margin-left: 15px;">Отмена</a>
+        </form>
+    </div>
+</body>
+</html>

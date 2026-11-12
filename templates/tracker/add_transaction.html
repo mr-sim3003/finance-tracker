@@ -8,7 +8,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Новая транзакция</h1>
+        <h1>
+            {% if object %}Редактировать транзакцию{% else %}Новая транзакция{% endif %}
+        </h1>
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}

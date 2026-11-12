@@ -184,3 +184,33 @@ def test_unique_category_per_user(user):
     # Пытаемся создать вторую с тем же именем и владельцем
     with pytest.raises(IntegrityError):
         Category.objects.create(name="Food", owner=user)
+
+
+@pytest.mark.django_db
+def test_user_cannot_edit_other_users_transaction(client, user):
+    User = get_user_model() # 1. Создаем второго пользователя и его транзакцию
+    user2 = User.objects.create_user(username='user2', password='password2')
+    cat2 = Category.objects.create(name="Food", owner=user2)
+
+    t2 = Transaction.objects.create(
+        type='income', amount=100, category=cat2, owner=user2, date='2026-11-02'
+    )
+    client.force_login(user)                       # 2. Логинимся под ПЕРВЫМ пользователем
+    
+    response = client.get(f'/edit/{t2.id}/')        # 3. Пытаемся открыть страницу редактирования чужой транзакции   
+    assert response.status_code == 404               # 4. Должна быть 404 (Not Found)
+    
+    response_delete = client.get(f'/delete/{t2.id}/') # 5. Пытаемся удалить чужую транзакцию
+    assert response_delete.status_code == 404
+
+@pytest.mark.django_db
+def test_user_can_edit_own_transaction(client, user):
+    cat = Category.objects.create(name="Food", owner=user) # Создаем свою транзакцию
+
+    t1 = Transaction.objects.create(
+        type='income', amount=100, category=cat, owner=user, date='2026-11-02'
+    )
+    client.force_login(user)
+
+    response = client.get(f'/edit/{t1.id}/')               # Открываем свою транзакцию — должна быть 200 (OK)
+    assert response.status_code == 200
