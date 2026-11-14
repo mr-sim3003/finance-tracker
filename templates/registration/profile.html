@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container" style="max-width: 500px;">
+        <h1>Профиль</h1>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email|default:"не указан" }}</p>
+            <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y H:i" }}</p>
+            <p><strong>Последний вход:</strong> {{ user.last_login|date:"d.m.Y H:i"|default:"—" }}</p>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <a href="{% url 'password_change' %}" class="btn">Сменить пароль</a>
+            <a href="{% url 'delete_account' %}" style="margin-left: 15px; color: #e74c3c;">Удалить аккаунт</a>
+        </div>
+        
+        <p style="margin-top: 20px;">
+            <a href="{% url 'transaction_list' %}">← К транзакциям</a>
+        </p>
+    </div>
+</body>
+</html>

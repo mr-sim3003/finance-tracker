@@ -34,7 +34,13 @@ services:                                             # Сейчас их три
       db:
         condition: service_healthy
     env_file:
-      - .env                                               # читает переменные из файла .env (там SECRET_KEY, DEBUG, DATABASE_URL, ALLOWED_HOSTS). Это позволяет не хардкодить секреты в docker-compose.yml.
+      - .env   
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s                                            # читает переменные из файла .env (там SECRET_KEY, DEBUG, DATABASE_URL, ALLOWED_HOSTS). Это позволяет не хардкодить секреты в docker-compose.yml.
 
 
   nginx:                                               # имя сервиса.

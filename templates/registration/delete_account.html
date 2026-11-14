@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Удаление аккаунта</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container" style="max-width: 500px;">
+        <h1 style="color: #e74c3c;">Удаление аккаунта</h1>
+        
+        <div style="background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+            <strong>⚠️ Внимание!</strong> Это действие <strong>необратимо</strong>. 
+            Все ваши транзакции, категории и история импортов будут <strong>удалены навсегда</strong>.
+        </div>
+        
+        <p>Вы уверены, что хотите удалить аккаунт <strong>{{ user.username }}</strong>?</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" style="background-color: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                Да, удалить аккаунт
+            </button>
+            <a href="{% url 'profile' %}" style="margin-left: 15px;">Отмена</a>
+        </form>
+    </div>
+</body>
+</html>

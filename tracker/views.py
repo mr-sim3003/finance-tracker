@@ -1,12 +1,16 @@
 import calendar
 from datetime import date, datetime
 
+import redis
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import default_storage
+from django.db import connection
 from django.db.models import Sum
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, UpdateView
@@ -166,3 +170,30 @@ class ImportJobListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return ImportJob.objects.filter(user=self.request.user)
+
+def healthz(request):
+    """Проверка живости приложения: БД, Redis."""
+    health = {'status': 'ok', 'services': {}}
+    
+    # 1. Проверка PostgreSQL
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        health['services']['db'] = 'ok'
+    except Exception as e: # noqa: BLE001
+        health['services']['db'] = f'error: {e!s}'
+        health['status'] = 'degraded'
+    
+    # 2. Проверка Redis
+    try:
+        redis_url = getattr(settings, 'CELERY_BROKER_URL', 'redis://redis:6379/0')
+        # Redis URL может быть в формате redis://host:port/db
+        r = redis.from_url(redis_url)
+        r.ping()
+        health['services']['redis'] = 'ok'
+    except Exception as e: # noqa: BLE001
+        health['services']['redis'] = f'error: {e!s}'
+        health['status'] = 'degraded'
+    
+    status_code = 200 if health['status'] == 'ok' else 503
+    return JsonResponse(health, status=status_code)
