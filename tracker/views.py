@@ -1,11 +1,14 @@
+import calendar
+from datetime import date, datetime
+
+from dateutil.relativedelta import relativedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import default_storage
-from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import DeleteView, UpdateView
+from django.views.generic import DeleteView, ListView, UpdateView
 
 from .forms import CSVUploadForm, TransactionForm
 from .models import Transaction
@@ -78,3 +81,49 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     def form_valid(self, form):
         messages.success(self.request, 'Транзакция удалена.')
         return super().form_valid(form)
+
+class TransactionListView(LoginRequiredMixin, ListView):
+    model = Transaction
+    template_name = 'tracker/transaction_list.html'
+    context_object_name = 'transactions'
+    paginate_by = 100  # Пагинация внутри месяца
+
+    def get_queryset(self):
+        # 1. Определяем, за какой месяц показывать данные
+        month_param = self.request.GET.get('month')
+        try:
+            # Пытаемся распарсить YYYY-MM
+            parsed_date = datetime.strptime(month_param, '%Y-%m').date() if month_param else date.today()
+        except ValueError:
+            parsed_date = date.today()
+
+        # 2. Вычисляем первый и последний день месяца
+        first_day = parsed_date.replace(day=1)
+        last_day = parsed_date.replace(day=calendar.monthrange(parsed_date.year, parsed_date.month)[1])
+
+        # 3. Сохраняем для использования в шаблоне
+        self.current_month = parsed_date
+        self.first_day = first_day
+        self.last_day = last_day
+
+        # 4. Фильтруем транзакции пользователя за этот период
+        return Transaction.objects.filter(
+            owner=self.request.user,
+            date__gte=first_day,
+            date__lte=last_day
+        ).select_related('category').order_by('-date', '-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context['current_month'] = self.current_month
+        context['month_name'] = self.current_month.strftime('%B %Y')
+        
+        # Используем relativedelta для надежного сдвига по месяцам
+        prev_month_date = self.first_day - relativedelta(months=1)
+        next_month_date = self.first_day + relativedelta(months=1)
+        
+        context['prev_month'] = prev_month_date.strftime('%Y-%m')
+        context['next_month'] = next_month_date.strftime('%Y-%m')
+        
+        return context

@@ -11,6 +11,8 @@ body {
     color: #333;
     line-height: 1.6;
     padding: 20px;
+    overflow-y: auto; /* разрешаем прокрутку */
+    min-height: 100vh; /* страница занимает минимум весь экран */
 }
 
 /* Контейнер */

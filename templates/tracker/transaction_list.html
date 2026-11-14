@@ -9,9 +9,26 @@
 <body>
     <div class="container">
         <h1>Мои транзакции</h1>
+        <div style="margin-bottom: 20px; padding: 10px; background-color: #f4f4f4; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
+            {% if user.is_authenticated %}
+                <span>Вы вошли как <strong>{{ user.username }}</strong></span>
+                <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: red; cursor: pointer; text-decoration: underline;">Выйти</button>
+                </form>
+            {% else %}
+                <span>Вы не авторизованы.</span>
+                <a href="{% url 'login' %}" style="background-color: #2ecc71; color: white; padding: 5px 15px; text-decoration: none; border-radius: 3px;">Войти</a>
+            {% endif %}
+        </div>
         <div style="margin-bottom: 20px;">
             <a href="{% url 'add_transaction' %}" class="btn">+ Добавить</a>
             <a href="{% url 'upload_csv' %}" class="btn">Импорт CSV</a>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px; background-color: #fff; border: 1px solid #ddd; border-radius: 5px;">
+            <a href="?month={{ prev_month }}" style="text-decoration: none; color: #3498db; font-weight: bold;">← Предыдущий месяц</a>
+            <span style="font-weight: bold; font-size: 1.1em;">{{ month_name }}</span>
+            <a href="?month={{ next_month }}" style="text-decoration: none; color: #3498db; font-weight: bold;">Следующий месяц →</a>
         </div>
         <ul>
             {% for t in transactions %}
@@ -29,6 +46,19 @@
                 <li>Пока нет транзакций.</li>
             {% endfor %}
         </ul>
+        {% if is_paginated %}
+            <div style="margin-top: 20px; text-align: center;">
+                {% if page_obj.has_previous %}
+                    <a href="?month={{ current_month|date:'Y-m' }}&page={{ page_obj.previous_page_number }}">← Назад</a>
+                {% endif %}
+                
+                <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?month={{ current_month|date:'Y-m' }}&page={{ page_obj.next_page_number }}">Вперед →</a>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
 </body>
 </html>

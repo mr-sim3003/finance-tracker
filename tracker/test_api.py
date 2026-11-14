@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -214,3 +216,107 @@ def test_user_can_edit_own_transaction(client, user):
 
     response = client.get(f'/edit/{t1.id}/')               # Открываем свою транзакцию — должна быть 200 (OK)
     assert response.status_code == 200
+
+@pytest.mark.django_db
+def test_main_page_requires_login(client):
+    """
+    Проверяет, что неавторизованный пользователь не может попасть на главную страницу
+    и перенаправляется на страницу входа.
+    """
+    response = client.get('/')
+    
+    # Ожидаем редирект (302)
+    assert response.status_code == 302
+    # Проверяем, что редирект ведет именно на страницу логина
+    assert '/accounts/login/' in response.url
+
+
+@pytest.mark.django_db
+def test_user_sees_only_own_transactions_on_main_page(client, user):
+    """
+    Проверяет, что на главной странице пользователь видит только свои транзакции.
+    """
+    User = get_user_model()
+    user2 = User.objects.create_user(username='user2', password='password2')
+    
+    # Создаем транзакции для обоих пользователей
+    cat1 = Category.objects.create(name="Food", owner=user)
+    cat2 = Category.objects.create(name="Transport", owner=user2)
+    
+    t1 = Transaction.objects.create(type='income', amount=100, category=cat1, owner=user, date='2026-11-02')
+    Transaction.objects.create(type='expense', amount=50, category=cat2, owner=user2, date='2026-11-02')
+    
+    # Логинимся под ПЕРВЫМ пользователем
+    client.force_login(user)
+    
+    # Запрашиваем главную страницу
+    response = client.get('/')
+    
+    # Проверяем, что страница открылась успешно
+    assert response.status_code == 200
+    
+    # Проверяем, что в контексте шаблона (в списке transactions) только 1 транзакция
+    assert len(response.context['transactions']) == 1
+    
+    # Проверяем, что это именно транзакция первого пользователя
+    assert response.context['transactions'][0].id == t1.id
+
+@pytest.mark.django_db
+def test_create_transaction_with_new_category(client, user):
+    """
+    Проверяет, что при вводе новой категории она создается и привязывается к транзакции.
+    """
+    client.force_login(user)
+    
+    response = client.post('/add/', {
+        'type': 'expense',
+        'amount': '150.00',
+        'new_category': 'Кофе', # <-- Вводим новую категорию
+        'date': '2026-11-05',
+        'description': 'Утренний кофе'
+    })
+    
+    # Проверяем редирект на главную после успешного сохранения
+    assert response.status_code == 302
+    
+    # Проверяем, что категория создалась
+    category = Category.objects.get(owner=user, name='Кофе')
+    assert category is not None
+    
+    # Проверяем, что транзакция привязалась к этой категории
+    transaction = Transaction.objects.get(owner=user, amount=150)
+    assert transaction.category == category
+
+@pytest.mark.django_db
+def test_main_page_filters_by_month(client, user):
+    """
+    Проверяет, что главная страница по умолчанию показывает только текущий месяц.
+    """
+    cat = Category.objects.create(name="Food", owner=user)
+    
+    # Используем переменные с другими именами, чтобы не затенять класс date
+    today_dt = date.today()
+    
+    # Транзакция в текущем месяце (сегодня)
+    t_current = Transaction.objects.create(
+        type='income', amount=100, category=cat, owner=user, date=today_dt
+    )
+    
+    # Транзакция в прошлом месяце (первое число прошлого месяца минус 1 день = последний день предыдущего)
+    prev_month_dt = (today_dt.replace(day=1) - timedelta(days=1))
+    
+    t_prev = Transaction.objects.create(
+        type='income', amount=50, category=cat, owner=user, date=prev_month_dt
+    )
+    
+    client.force_login(user)
+    
+    # По умолчанию (без параметра month) видим только текущий месяц
+    response = client.get('/')
+    assert len(response.context['transactions']) == 1
+    assert response.context['transactions'][0].id == t_current.id
+    
+    # Запрашиваем прошлый месяц явно
+    response_prev = client.get(f'/?month={prev_month_dt.strftime("%Y-%m")}')
+    assert len(response_prev.context['transactions']) == 1
+    assert response_prev.context['transactions'][0].id == t_prev.id
