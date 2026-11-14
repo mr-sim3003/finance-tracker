@@ -30,6 +30,22 @@
             <span style="font-weight: bold; font-size: 1.1em;">{{ month_name }}</span>
             <a href="?month={{ next_month }}" style="text-decoration: none; color: #3498db; font-weight: bold;">Следующий месяц →</a>
         </div>
+                <div style="display: flex; justify-content: space-between; background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #3498db;">
+            <div>
+                <span style="color: #666; font-size: 0.9em;">Доходы:</span>
+                <strong style="color: #27ae60; font-size: 1.2em;">+{{ total_income }} ₽</strong>
+            </div>
+            <div>
+                <span style="color: #666; font-size: 0.9em;">Расходы:</span>
+                <strong style="color: #e74c3c; font-size: 1.2em;">-{{ total_expense }} ₽</strong>
+            </div>
+            <div>
+                <span style="color: #666; font-size: 0.9em;">Баланс:</span>
+                <strong style="color: {% if balance >= 0 %}#27ae60{% else %}#e74c3c{% endif %}; font-size: 1.2em;">
+                    {{ balance }} ₽
+                </strong>
+            </div>
+        </div>
         <ul>
             {% for t in transactions %}
                 <li>

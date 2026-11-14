@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import default_storage
+from django.db.models import Sum
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, UpdateView
@@ -86,7 +87,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
     model = Transaction
     template_name = 'tracker/transaction_list.html'
     context_object_name = 'transactions'
-    paginate_by = 100  # Пагинация внутри месяца
+    paginate_by = 15  # Пагинация внутри месяца
 
     def get_queryset(self):
         # 1. Определяем, за какой месяц показывать данные
@@ -119,11 +120,28 @@ class TransactionListView(LoginRequiredMixin, ListView):
         context['current_month'] = self.current_month
         context['month_name'] = self.current_month.strftime('%B %Y')
         
-        # Используем relativedelta для надежного сдвига по месяцам
         prev_month_date = self.first_day - relativedelta(months=1)
         next_month_date = self.first_day + relativedelta(months=1)
         
         context['prev_month'] = prev_month_date.strftime('%Y-%m')
         context['next_month'] = next_month_date.strftime('%Y-%m')
+
+        # Подсчет сумм за месяц ---
+        # Берем все транзакции пользователя за этот месяц (без учета пагинации!)
+        month_transactions = Transaction.objects.filter(
+            owner=self.request.user,
+            date__gte=self.first_day,
+            date__lte=self.last_day
+        )
+
+        # Считаем сумму доходов (type='income')
+        income_sum = month_transactions.filter(type='income').aggregate(total=Sum('amount'))['total'] or 0
         
+        # Считаем сумму расходов (type='expense')
+        expense_sum = month_transactions.filter(type='expense').aggregate(total=Sum('amount'))['total'] or 0
+
+        context['total_income'] = income_sum
+        context['total_expense'] = expense_sum
+        context['balance'] = income_sum - expense_sum  # Баланс (доходы минус расходы)
+
         return context

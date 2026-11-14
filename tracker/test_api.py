@@ -320,3 +320,24 @@ def test_main_page_filters_by_month(client, user):
     response_prev = client.get(f'/?month={prev_month_dt.strftime("%Y-%m")}')
     assert len(response_prev.context['transactions']) == 1
     assert response_prev.context['transactions'][0].id == t_prev.id
+
+@pytest.mark.django_db
+def test_monthly_totals_calculation(client, user):
+    cat = Category.objects.create(name="Food", owner=user)
+    
+    # Создаем транзакции в текущем месяце
+    today = date.today()
+    Transaction.objects.create(type='income', amount=1000, category=cat, owner=user, date=today)
+    Transaction.objects.create(type='income', amount=500, category=cat, owner=user, date=today)
+    Transaction.objects.create(type='expense', amount=300, category=cat, owner=user, date=today)
+    
+    # Транзакция в прошлом месяце (не должна попасть в текущий подсчет)
+    prev_month = today.replace(day=1) - timedelta(days=1)
+    Transaction.objects.create(type='expense', amount=9999, category=cat, owner=user, date=prev_month)
+    
+    client.force_login(user)
+    response = client.get('/')
+    
+    assert response.context['total_income'] == 1500
+    assert response.context['total_expense'] == 300
+    assert response.context['balance'] == 1200
