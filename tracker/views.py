@@ -12,7 +12,7 @@ from django.urls import reverse_lazy
 from django.views.generic import DeleteView, ListView, UpdateView
 
 from .forms import CSVUploadForm, TransactionForm
-from .models import Transaction
+from .models import ImportJob, Transaction
 from .tasks import import_csv_task
 
 
@@ -30,6 +30,7 @@ def add_transaction(request):
 
     return render(request, 'tracker/add_transaction.html', {'form': form})
 
+
 @login_required
 def upload_csv(request):
     if request.method == 'POST':
@@ -42,9 +43,20 @@ def upload_csv(request):
                 messages.error(request, 'Файл должен быть в формате CSV.')
                 return redirect('upload_csv')   
                      
-            file_name = default_storage.save(csv_file.name, csv_file)                           #  сохраняет файл на диск (например, в /app/media/), чтобы Celery мог его прочитать из другого процесса.                    
-            import_csv_task.delay(request.user.id, file_name)                                    # Запускаем задачу в фоне Метод .delay() не выполняет задачу сразу. Он кладет задачу в очередь Redis и сразу возвращает управление. Пользователь сразу видит сообщение «Файл принят в обработку», не дожидаясь, пока парсинг закончится.    
-            messages.success(request, 'Файл принят в обработку. Результат появится чуть позже.')  # Воркер Celery (отдельный процесс) забирает задачу из Redis и выполняет import_csv_task.
+            # 1. Сохраняем файл на диск (как и раньше)
+            file_name = default_storage.save(csv_file.name, csv_file)
+            
+            # 2. Создаём ЗАПИСЬ В БД о том, что импорт начался (NEW!)
+            job = ImportJob.objects.create(
+                user=request.user,
+                file_name=file_name,
+                status='pending'  # начальный статус
+            )
+            
+            # 3. Передаём в Celery ID задачи (а не user_id + file_name)
+            import_csv_task.delay(job.id)
+            
+            messages.success(request, 'Файл принят в обработку. Результат появится чуть позже.')
             return redirect('transaction_list')
         
     else:
@@ -145,3 +157,12 @@ class TransactionListView(LoginRequiredMixin, ListView):
         context['balance'] = income_sum - expense_sum  # Баланс (доходы минус расходы)
 
         return context
+
+class ImportJobListView(LoginRequiredMixin, ListView):
+    model = ImportJob
+    template_name = 'tracker/import_job_list.html'
+    context_object_name = 'jobs'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return ImportJob.objects.filter(user=self.request.user)

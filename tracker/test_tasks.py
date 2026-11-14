@@ -4,7 +4,7 @@ from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
-from tracker.models import Transaction
+from tracker.models import ImportJob, Transaction
 from tracker.tasks import import_csv_task
 
 
@@ -39,7 +39,9 @@ def test_csv_import_is_idempotent(auth_client, user):
     response1 = auth_client.post('/upload-csv/', {'file': csv_file})                    #  Загружаем файл ПЕРВЫЙ.  проверяет, что импорт работает
     assert response1.status_code == 302  
     file_name = default_storage.save("test.csv", csv_file)
-    _ = import_csv_task(user.id, file_name)                                                                           # Редирект после успеха
+    job = ImportJob.objects.create(user=user, file_name=file_name, status='pending')
+    result = import_csv_task(job.id)                                                                           # Редирект после успеха
+    assert "Успешно загружено: 2" in result
     assert Transaction.objects.count() == 2                                           # Создалось 2 транзакции      
 
     csv_file_2 = SimpleUploadedFile(
@@ -70,7 +72,8 @@ def test_empty_csv_import(user):
     
     # Сохраняем файл и вызываем задачу напрямую
     file_name = default_storage.save("empty.csv", csv_file)
-    result = import_csv_task(user.id, file_name)
+    job = ImportJob.objects.create(user=user, file_name=file_name, status='pending')
+    result = import_csv_task(job.id)
     
     # Проверяем, что задача вернула успех с 0
     assert "Успешно загружено: 0" in result
@@ -91,7 +94,8 @@ def test_broken_csv_import(user):
     )
     
     file_name = default_storage.save("broken.csv", csv_file)
-    result = import_csv_task(user.id, file_name)
+    job = ImportJob.objects.create(user=user, file_name=file_name, status='pending')
+    result = import_csv_task(job.id)
     
     # Задача должна вернуть ошибку (или сообщение о 0 загруженных)
     # Главное — она не должна упасть с KeyError

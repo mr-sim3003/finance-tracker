@@ -1,6 +1,36 @@
-venv/
+# Python
 __pycache__/
-*.pyc
-*.pyo
-.env
+*.py[cod]
+*.so
+.Python
+venv/
+.venv/
+env/
+
+# Django
+*.log
 db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Testing
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

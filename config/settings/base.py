@@ -13,6 +13,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',                          # Стороние приложения
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
     
     'accounts',                               # Мои приложения
     'tracker',
@@ -79,6 +81,7 @@ USE_TZ = True
 
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -106,4 +109,22 @@ STATICFILES_DIRS = [
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',   
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Finance Tracker API',
+    'DESCRIPTION': 'API для учёта личных доходов и расходов',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    
+    #Локальные ассеты вместо внешних CDN 
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
+    
+    # Удобства для Swagger UI 
+    'SWAGGER_UI_SETTINGS': {
+        'persistAuthorization': True,  # токен не слетает при перезагрузке страницы
+    },
 }

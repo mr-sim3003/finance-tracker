@@ -76,3 +76,38 @@ class Transaction(models.Model):
 # который возвращает человеческое название выбранного варианта (например, Income вместо income).
 
 # self.get_type_display() Метод возвращает строку вида: Income 100.00 (2026-11-05).
+
+class ImportJob(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('done', 'Done'),
+        ('failed', 'Failed'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='import_jobs',
+        verbose_name="User"
+    )
+    file_name = models.CharField(max_length=255, verbose_name="File name")
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name="Status"
+    )
+    created_count = models.IntegerField(default=0, verbose_name="Created")
+    skipped_count = models.IntegerField(default=0, verbose_name="Skipped")
+    error_message = models.TextField(blank=True, verbose_name="Error message")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Import Job"
+        verbose_name_plural = "Import Jobs"
+
+    def __str__(self):
+        return f"{self.file_name} ({self.status})"
