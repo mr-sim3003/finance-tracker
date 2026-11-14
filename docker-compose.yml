@@ -5,7 +5,7 @@ services:                                             # Сейчас их три
     environment:                                               # переменные окружения. Официальный образ PostgreSQL читает их при старте, чтобы создать базу и пользователя. Без них база не запустится.
       POSTGRES_DB: tracker_db
       POSTGRES_USER: tracker_user
-      POSTGRES_PASSWORD: tracker_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:                                                # это критически важный блок, который мы обсуждали. Docker сам будет запускать команду pg_isready каждые 5 секунд (interval). Если база не ответит за 5 секунд (timeout), попытка считается неудачной. Всего 5 попыток (retries). Пока статус не станет healthy, сервис web не запустится.
       test: ["CMD-SHELL", "pg_isready -U tracker_user -d tracker_db"]
       interval: 5s
