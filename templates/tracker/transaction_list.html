@@ -13,10 +13,10 @@
         <!-- Блок с пользователем -->
         <div style="margin-bottom: 20px; padding: 10px; background-color: #f4f4f4; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
             {% if user.is_authenticated %}
-                <span>Вы вошли как <a href="{% url 'profile' %}"><strong>{{ user.username }}</strong></a></span>
+                <span>Вы вошли как <a href="{% url 'accounts:profile' %}"><strong>{{ user.username }}</strong></a></span>
                 <div>
-                    <a href="{% url 'profile' %}" style="margin-right: 15px;">Профиль</a>
-                    <form action="{% url 'logout' %}" method="post" style="margin: 0; display: inline;">
+                    <a href="{% url 'accounts:profile' %}" style="margin-right: 15px;">Профиль</a>
+                    <form action="{% url 'accounts:logout' %}" method="post" style="margin: 0; display: inline;">
                         {% csrf_token %}
                         <button type="submit" style="background: none; border: none; color: red; cursor: pointer; text-decoration: underline;">Выйти</button>
                     </form>
@@ -26,9 +26,9 @@
 
         <!-- Блок с кнопками действий -->
         <div style="margin-bottom: 20px;">
-            <a href="{% url 'add_transaction' %}" class="btn">+ Добавить</a>
-            <a href="{% url 'upload_csv' %}" class="btn">Импорт CSV</a>
-            <a href="{% url 'import_job_list' %}" class="btn">История импортов</a>
+            <a href="{% url 'tracker:add_transaction' %}" class="btn">+ Добавить</a>
+            <a href="{% url 'tracker:upload_csv' %}" class="btn">Импорт CSV</a>
+            <a href="{% url 'tracker:import_job_list' %}" class="btn">История импортов</a>
         </div>
 
         <!-- Блок с переключением месяцев -->
@@ -65,8 +65,8 @@
                     {% if t.description %} ({{ t.description }}) {% endif %}
                     
                     <span style="float: right;">
-                        <a href="{% url 'transaction_edit' t.pk %}" style="margin-right: 10px;">✏️ Редактировать</a>
-                        <a href="{% url 'transaction_delete' t.pk %}" style="color: red;">🗑️ Удалить</a>
+                        <a href="{% url 'tracker:transaction_edit' t.pk %}" style="margin-right: 10px;">✏️ Редактировать</a>
+                        <a href="{% url 'tracker:transaction_delete' t.pk %}" style="color: red;">🗑️ Удалить</a>
                     </span>
                 </li>
             {% empty %}

@@ -1,9 +1,15 @@
+"""
+Модели приложения tracker.
+
+Описывает основные бизнес-сущности: Категория, Транзакция и Задача импорта.
+"""
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
 
 class Category(models.Model):
+    """Категория транзакции (например, 'Еда' или 'Зарплата')."""
     name = models.CharField(max_length=100, verbose_name="Name") # verbose_name — это название для админки.
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,                  # ссылка на кастомного пользователя
@@ -15,6 +21,7 @@ class Category(models.Model):
     class Meta:                                    # Названия таблицы, поля фильтрации, индексы. Hастройки модели, которые не создают колонок в БД.
         verbose_name = "Category"                  # как модель называется в админке (в единственном и множественном числе).
         verbose_name_plural = "Categories"         # как модель называется в админке (в единственном и множественном числе).
+        # У одного пользователя не может быть двух одинаковых категорий.
         constraints = [                                                                         # Это шов на уровне БД. UniqueConstraint запрещает дубликаты.
             models.UniqueConstraint(fields=['owner', 'name'], name='unique_category_per_user')  # Но не просто «уникальное имя», а уникальная пара (owner + name). 
         ]                                                                                       # То есть у одного пользователя не может быть двух категорий «Food», но у разных пользователей — может.
@@ -23,7 +30,8 @@ class Category(models.Model):
         return self.name
 
 
-class Transaction(models.Model):              
+class Transaction(models.Model): 
+    """Финансовая операция (доход или расход)."""             
     TYPE_CHOICES = [                            # чтобы ограничить возможные значения (только income или expense).
         ('income', 'Income'),                   # Константа TYPE_CHOICES — список кортежей. Она нужна для поля type, 
         ('expense', 'Expense'),

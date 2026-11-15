@@ -1,5 +1,11 @@
+"""
+Корневая URL-схема проекта.
+
+Знает только: admin, два приложения (tracker, accounts) и spectacular.
+Внутренности приложений — не его дело: /add/, /login/ и т.д. описаны
+в tracker/urls.py и accounts/urls.py соответственно.
+"""
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -7,45 +13,22 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from accounts.views import delete_account, profile, register
-from tracker.views import (
-    ImportJobListView,
-    TransactionDeleteView,
-    TransactionListView,
-    TransactionUpdateView,
-    add_transaction,
-    healthz,
-    upload_csv,
-)
-
 urlpatterns = [
+    # Админка
     path('admin/', admin.site.urls),
 
-    #  API 
-    path('api/', include('tracker.api.urls')),
+    # Приложения.
+    # tracker — без префикса: главная = список транзакций (/),
+    # поэтому include('') сохраняет обратную совместимость URL
+    # (/add/, /edit/1/, /upload-csv/). Если бы был path('tracker/', ...),
+    # все URL съехали бы на /tracker/add/ и тесты покраснели бы.
+    path('', include('tracker.urls')),
+    path('accounts/', include('accounts.urls')),
 
-    # Swagger / OpenAPI
+    # OpenAPI / Swagger / ReDoc.
+    # Здесь, а не в приложении: это документация ВСЕГО API проекта,
+    # а не конкретного приложения.
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-
-    #  Web 
-    path('', TransactionListView.as_view(), name='transaction_list'),
-    path('add/', add_transaction, name='add_transaction'),
-    path('edit/<int:pk>/', TransactionUpdateView.as_view(), name='transaction_edit'),
-    path('delete/<int:pk>/', TransactionDeleteView.as_view(), name='transaction_delete'),
-    #  import
-    path('upload-csv/', upload_csv, name='upload_csv'),
-    path('import-jobs/', ImportJobListView.as_view(), name='import_job_list'),
-    #  account
-    path('accounts/register/', register, name='register'),
-    path('accounts/profile/', profile, name='profile'),
-    path('accounts/password-change/', auth_views.PasswordChangeView.as_view(), name='password_change'),
-    path('accounts/password-change/done/', auth_views.PasswordChangeDoneView.as_view(), name='password_change_done'),
-    path('accounts/delete/', delete_account, name='delete_account'),
-    #  auth
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(next_page='transaction_list'), name='logout'),
-    
-    path('healthz/', healthz, name='healthz'),
 ]

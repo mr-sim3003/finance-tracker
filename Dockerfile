@@ -23,3 +23,6 @@ COPY . /app/
 
 # Открываем порт (пока просто для информации, проброс сделаем в compose)
 EXPOSE 8000
+
+# Дефолтная команда: запуск Gunicorn
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]

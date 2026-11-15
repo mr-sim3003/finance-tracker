@@ -1,23 +1,28 @@
-import csv
-from datetime import datetime
-from io import TextIOWrapper
+"""
+Фоновые задачи Celery.
 
+Здесь описана логика импорта CSV: чтение файла, парсинг и сохранение
+с защитой от дубликатов (идемпотентность).
+"""
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.core.files.storage import default_storage
 from django.db import IntegrityError
 
 from .models import Category, ImportJob, Transaction
+from .parsers import GenericCSVParser
 
 User = get_user_model()
 
-@shared_task(
-    autoretry_for=(Exception,),           # retry при любой ошибке
-    retry_backoff=True,                   # экспоненциальный backoff: 1, 2, 4, 8, ...
-    retry_backoff_max=600,                # максимум 10 минут между попытками
-    retry_jitter=True,                    # случайный разброс, чтобы не бить БД одновременно
-    max_retries=3,                        # всего 3 попытки
-)                                      #  @shared_task — декоратор, который говорит Celery, что это задача.
+# Декоратор @shared_task с настройками ретраев:
+# если БД упадет или файл временно недоступен — Celery попробует снова.
+@shared_task(                  #  @shared_task — декоратор, который говорит Celery, что это задача.
+    autoretry_for=(Exception,),
+    retry_backoff=True,        # Экспоненциальная задержка между попытками
+    retry_backoff_max=600,     # Максимум 10 минут
+    retry_jitter=True,         # Случайный разброс, чтобы не бить БД одновременно
+    max_retries=3,             # Всего 3 попытки
+)
 def import_csv_task(job_id):
     try:
         job = ImportJob.objects.get(id=job_id)
@@ -28,28 +33,22 @@ def import_csv_task(job_id):
         file_name = job.file_name
         
         with default_storage.open(file_name, 'rb') as f:
-            data_set = TextIOWrapper(f, encoding='utf-8')
-            reader = csv.DictReader(data_set)
+            parser = GenericCSVParser()           # <--- создаём парсер
+            rows = parser.parse(f)                # <--- парсим в список словарей
             created_count = 0
             skipped_count = 0
 
-            for row in reader:
-                category_name = row.get('category', '').strip()
+            for row in rows:
+                category_name = row['category']
                 category, _ = Category.objects.get_or_create(owner=user, name=category_name)
-
-                try:
-                    date_obj = datetime.strptime(row['date'], '%Y-%m-%d').date()
-                except (ValueError, KeyError):
-                    date_obj = datetime.now().date()
-
                 try:
                     Transaction.objects.create(
-                        owner=user,
-                        type=row['type'],
-                        amount=row['amount'],
-                        category=category,
-                        date=date_obj,
-                        description=row.get('description', '')
+                       owner=user,
+                       type=row['type'],
+                       amount=row['amount'],
+                       category=category,
+                       date=row['date'],
+                       description=row.get('description', '')
                     )
                     created_count += 1
                 except IntegrityError:

@@ -11,8 +11,8 @@
         <h1>История импортов</h1>
         
         <p style="margin-bottom: 20px;">
-            <a href="{% url 'transaction_list' %}">← К транзакциям</a>
-            <a href="{% url 'upload_csv' %}" class="btn" style="margin-left: 10px;">+ Новый импорт</a>
+            <a href="{% url 'tracker:transaction_list' %}">← К транзакциям</a>
+            <a href="{% url 'tracker:upload_csv' %}" class="btn" style="margin-left: 10px;">+ Новый импорт</a>
         </p>
 
         {% if jobs %}

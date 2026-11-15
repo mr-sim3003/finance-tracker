@@ -2,7 +2,11 @@ import os
 
 from .base import *
 
-# Для тестов используем быструю SQLite в памяти
+CELERY_TASK_ALWAYS_EAGER = True            # Отключаем всё, что мешает тестам (кеши, celery)
+
+MEDIA_ROOT = '/tmp/test_media'                   # отдельная директория для тестов
+os.makedirs(MEDIA_ROOT, exist_ok=True)
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -10,11 +14,4 @@ DATABASES = {
     }
 }
 
-# Тестовый ключ (не секретный, только для CI)
-SECRET_KEY = 'test-secret-key-for-ci'
-
-# Отключаем всё, что мешает тестам (кеши, celery)
-CELERY_TASK_ALWAYS_EAGER = True
-
-MEDIA_ROOT = '/tmp/test_media'
-os.makedirs(MEDIA_ROOT, exist_ok=True)
+SECRET_KEY = 'test-secret-key-for-ci'            # Тестовый ключ (не секретный, только для CI)

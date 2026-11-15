@@ -18,12 +18,12 @@
         </div>
         
         <div style="margin-bottom: 20px;">
-            <a href="{% url 'password_change' %}" class="btn">Сменить пароль</a>
-            <a href="{% url 'delete_account' %}" style="margin-left: 15px; color: #e74c3c;">Удалить аккаунт</a>
+            <a href="{% url 'accounts:password_change' %}" class="btn">Сменить пароль</a>
+            <a href="{% url 'accounts:delete_account' %}" style="margin-left: 15px; color: #e74c3c;">Удалить аккаунт</a>
         </div>
         
         <p style="margin-top: 20px;">
-            <a href="{% url 'transaction_list' %}">← К транзакциям</a>
+            <a href="{% url 'tracker:transaction_list' %}">← К транзакциям</a>
         </p>
     </div>
 </body>

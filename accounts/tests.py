@@ -11,7 +11,7 @@ def user(db):
 @pytest.mark.django_db
 def test_register_user(client):
     """Проверяет, что регистрация создаёт пользователя и логинит его."""
-    response = client.post(reverse('register'), {
+    response = client.post(reverse('accounts:register'), {
         'username': 'newuser',
         'email': 'new@example.com',
         'password1': 'testpass123',
@@ -20,7 +20,7 @@ def test_register_user(client):
 
     # После регистрации — редирект на главную
     assert response.status_code == 302
-    assert response.url == reverse('transaction_list')
+    assert response.url == reverse('tracker:transaction_list')
 
     # Пользователь создан
     User = get_user_model()
@@ -34,27 +34,27 @@ def test_register_user(client):
 @pytest.mark.django_db
 def test_register_password_mismatch(client):
     """Проверяет, что при несовпадении паролей пользователь не создаётся."""
-    response = client.post(reverse('register'), {
+    response = client.post(reverse('accounts:register'), {
         'username': 'newuser',
         'email': 'new@example.com',
         'password1': 'testpass123',
         'password2': 'different123',
     })
 
-    # Форма невалидна — остаёмся на странице регистрации (200)
+    
     assert response.status_code == 200
     assert not get_user_model().objects.filter(username='newuser').exists()
 
 @pytest.mark.django_db
 def test_admin_can_see_users(client):
     """Проверяет, что админка доступна только суперпользователю."""
-    # Обычный пользователь не может зайти в админку
-    client.login(username='testuser', password='testpassword')  # из фикстуры user
+    
+    client.login(username='testuser', password='testpassword')  # из фикстуры user # Обычный пользователь не может зайти в админку
     response = client.get('/admin/')
-    assert response.status_code == 302  # редирект на логин админки
+    assert response.status_code == 302                                    # редирект на логин админки
 
-    # Суперпользователь может
-    User = get_user_model()
+    
+    User = get_user_model()                                        # Суперпользователь может
     User.objects.create_superuser(username='admin2', password='adminpass')
     client.login(username='admin2', password='adminpass')
     response = client.get('/admin/')

@@ -1,3 +1,6 @@
+"""
+Настройка админ-панели для приложения tracker.
+"""
 from django.contrib import admin
 
 from .models import Category, ImportJob, Transaction

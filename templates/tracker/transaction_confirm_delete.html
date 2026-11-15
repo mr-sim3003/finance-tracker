@@ -14,7 +14,7 @@
         <form method="post">
             {% csrf_token %}
             <button type="submit" style="background-color: #e74c3c; color: white; border: none; padding: 10px 20px; cursor: pointer;">Да, удалить</button>
-            <a href="{% url 'transaction_list' %}" style="margin-left: 15px;">Отмена</a>
+            <a href="{% url 'tracker:transaction_list' %}" style="margin-left: 15px;">Отмена</a>
         </form>
     </div>
 </body>
