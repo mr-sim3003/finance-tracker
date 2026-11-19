@@ -80,7 +80,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -109,8 +109,27 @@ STATICFILES_DIRS = [
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',   
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
+    # Глобальная защита: все API по умолчанию требуют логина.
+    # Если в каком-то ViewSet нужно разрешить анонимный доступ,
+    # это можно переопределить локально через permission_classes.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+
+    # Ограничение частоты запросов (защита от спама и брутфорса).
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '1000/day',   # Авторизованный пользователь: 1000 запросов в день
+        'anon': '100/day',    # Анонимный: 100 запросов в день
+    },
 }
+
+
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Finance Tracker API',
@@ -128,3 +147,5 @@ SPECTACULAR_SETTINGS = {
         'persistAuthorization': True,  # токен не слетает при перезагрузке страницы
     },
 }
+
+
