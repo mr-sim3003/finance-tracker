@@ -6,8 +6,8 @@ app_name='accounts' создает namespace, чтобы URL-ы не конфл�
 """
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
-from .views import delete_account, profile, register, UserProfileUpdateView
-from .views import delete_account, profile, register
+
+from .views import UserProfileUpdateView, delete_account, profile, register
 
 app_name = 'accounts'
 
