@@ -9,89 +9,91 @@ from rest_framework.test import APIClient
 from tracker.models import Category, Transaction
 
 
-@pytest.fixture                            # Фикстура: создаёт тестового пользователя
+@pytest.fixture  # Фикстура: создаёт тестового пользователя
 def user(db):
     User = get_user_model()
-    return User.objects.create_user(username='testuser', password='testpassword')
+    return User.objects.create_user(username="testuser", password="testpassword")
 
-                                                                                        
-@pytest.fixture                                   # Фикстура: создаёт API-клиент
+
+@pytest.fixture  # Фикстура: создаёт API-клиент
 def api_client():
     return APIClient()
 
-                                                                                        
-@pytest.fixture                                    # Фикстура: авторизует клиент
+
+@pytest.fixture  # Фикстура: авторизует клиент
 def auth_client(api_client, user):
     api_client.force_authenticate(user=user)
     return api_client
 
-                                                                                       
-@pytest.mark.django_db                     # Тест 1: Нельзя создать транзакцию с отрицательной суммой
+
+@pytest.mark.django_db  # Тест 1: Нельзя создать транзакцию с отрицательной суммой
 def test_cannot_create_transaction_with_negative_amount(auth_client, user):
-    category = Category.objects.create(name="Food", owner=user) 
+    category = Category.objects.create(name="Food", owner=user)
 
- # Отправляем POST-запрос с отрицательной суммой                                                                                         
-    response = auth_client.post('/api/transactions/', {              
-        'type': 'income',
-        'amount': '-100.00',
-        'category': category.id,
-        'date': '2026-11-02',
-        'description': 'Test negative'
-    })                                                         
-    
-                                                                                            
-    assert response.status_code == 400                                       # Проверяем, что API вернул 400 Bad Request
-                                                                                           
-    assert 'amount' in response.data                                        # Проверяем, что ошибка именно в поле amount
+    # Отправляем POST-запрос с отрицательной суммой
+    response = auth_client.post(
+        "/api/transactions/",
+        {
+            "type": "income",
+            "amount": "-100.00",
+            "category": category.id,
+            "date": "2026-11-02",
+            "description": "Test negative",
+        },
+    )
+
+    assert response.status_code == 400  # Проверяем, что API вернул 400 Bad Request
+
+    assert "amount" in response.data  # Проверяем, что ошибка именно в поле amount
 
 
-
-                                                                                        
-@pytest.mark.django_db                                                       # Тест 2: Пользователь видит только свои транзакции
+@pytest.mark.django_db  # Тест 2: Пользователь видит только свои транзакции
 def test_user_sees_only_own_transactions(api_client, user):
-                                                                                           
-    User = get_user_model()                                                    # Создаём второго пользователя
-    user2 = User.objects.create_user(username='user2', password='password2')
-    
-                                                                                           
-    cat1 = Category.objects.create(name="Food", owner=user)                      # Создаём категории и транзакции для обоих пользователей
+    User = get_user_model()  # Создаём второго пользователя
+    user2 = User.objects.create_user(username="user2", password="password2")
+
+    cat1 = Category.objects.create(
+        name="Food", owner=user
+    )  # Создаём категории и транзакции для обоих пользователей
     cat2 = Category.objects.create(name="Transport", owner=user2)
-    
-    t1 = Transaction.objects.create(type='income', amount=100, category=cat1, owner=user, date='2026-11-02')
-    Transaction.objects.create(type='expense', amount=50, category=cat2, owner=user2, date='2026-11-02')
-    
-                                                                                            
-    api_client.force_authenticate(user=user)                                      # Логинимся под ПЕРВЫМ пользователем
-    
-                                                                                            
-    response = api_client.get('/api/transactions/')                                 # Запрашиваем список транзакций
-    
-                                                                                            
-    assert response.status_code == 200                                                # Проверяем, что вернулся 200 OK
-                                                                                            
-    assert response.data['count'] == 1                                      # Проверяем count в пагинации
-    assert len(response.data['results']) == 1                                           # Проверяем длину списка results
-    assert response.data['results'][0]['id'] == t1.id                                    # Проверяем ID в results                                         
-                                                                                            
-                                     
+
+    t1 = Transaction.objects.create(
+        type="income", amount=100, category=cat1, owner=user, date="2026-11-02"
+    )
+    Transaction.objects.create(
+        type="expense", amount=50, category=cat2, owner=user2, date="2026-11-02"
+    )
+
+    api_client.force_authenticate(user=user)  # Логинимся под ПЕРВЫМ пользователем
+
+    response = api_client.get("/api/transactions/")  # Запрашиваем список транзакций
+
+    assert response.status_code == 200  # Проверяем, что вернулся 200 OK
+
+    assert response.data["count"] == 1  # Проверяем count в пагинации
+    assert len(response.data["results"]) == 1  # Проверяем длину списка results
+    assert response.data["results"][0]["id"] == t1.id  # Проверяем ID в results
 
 
-                                                                                       
-@pytest.mark.django_db                                                            # Тест 3: Успешное создание транзакции
+@pytest.mark.django_db  # Тест 3: Успешное создание транзакции
 def test_create_valid_transaction(auth_client, user):
     category = Category.objects.create(name="Salary", owner=user)
     # auth_client — это фикстура из pytest-django, которая имитирует залогиненного пользователя. Твой View upload_csv защищен @login_required, поэтому без этого тест упал бы с 302 (редирект на логин).
-    response = auth_client.post('/api/transactions/', {
-        'type': 'income',
-        'amount': '500.00',
-        'category': category.id,
-        'date': '2026-11-03',
-        'description': 'Valid income'
-    })
-    
+    response = auth_client.post(
+        "/api/transactions/",
+        {
+            "type": "income",
+            "amount": "500.00",
+            "category": category.id,
+            "date": "2026-11-03",
+            "description": "Valid income",
+        },
+    )
+
     assert response.status_code == 201
     assert Transaction.objects.count() == 1
     assert Transaction.objects.first().amount == 500
+
 
 @pytest.mark.django_db
 def test_upload_non_csv_file_rejected(auth_client, user):
@@ -101,16 +103,14 @@ def test_upload_non_csv_file_rejected(auth_client, user):
     """
     # Создаем файл с расширением .txt
     txt_file = SimpleUploadedFile(
-        "test.txt", 
-        b"some text content", 
-        content_type="text/plain"
+        "test.txt", b"some text content", content_type="text/plain"
     )
-    
-    response = auth_client.post('/upload-csv/', {'file': txt_file})
-    
+
+    response = auth_client.post("/upload-csv/", {"file": txt_file})
+
     # Проверяем, что View вернул редирект (302), а не 200
     assert response.status_code == 302
-    
+
     # Проверяем, что транзакции НЕ создались
     assert Transaction.objects.count() == 0
 
@@ -122,17 +122,21 @@ def test_amount_exceeds_max_digits(auth_client, user):
     возвращает 400 Bad Request.
     """
     category = Category.objects.create(name="Food", owner=user)
-    
+
     # 11 цифр до запятой + 2 после = 13 цифр (больше max_digits=12)
-    response = auth_client.post('/api/transactions/', {
-        'type': 'income',
-        'amount': '10000000000.00',  # 10 миллиардов
-        'category': category.id,
-        'date': '2026-11-02',
-    })
-    
+    response = auth_client.post(
+        "/api/transactions/",
+        {
+            "type": "income",
+            "amount": "10000000000.00",  # 10 миллиардов
+            "category": category.id,
+            "date": "2026-11-02",
+        },
+    )
+
     assert response.status_code == 400
-    assert 'amount' in response.data
+    assert "amount" in response.data
+
 
 @pytest.mark.django_db
 def test_user_cannot_modify_other_users_transaction(auth_client, user):
@@ -142,36 +146,33 @@ def test_user_cannot_modify_other_users_transaction(auth_client, user):
     """
     # Создаем второго пользователя и его транзакцию
     User = get_user_model()
-    user2 = User.objects.create_user(username='user2', password='password2')
+    user2 = User.objects.create_user(username="user2", password="password2")
     cat2 = Category.objects.create(name="Food", owner=user2)
     t2 = Transaction.objects.create(
-        type='income', 
-        amount=100, 
-        category=cat2, 
-        owner=user2, 
-        date='2026-11-02'
+        type="income", amount=100, category=cat2, owner=user2, date="2026-11-02"
     )
-    
+
     # Логинимся под ПЕРВЫМ пользователем
     auth_client.force_authenticate(user=user)
-    
+
     # Пытаемся получить чужую транзакцию
-    response_get = auth_client.get(f'/api/transactions/{t2.id}/')
+    response_get = auth_client.get(f"/api/transactions/{t2.id}/")
     assert response_get.status_code == 404
-    
+
     # Пытаемся изменить чужую транзакцию
-    response_patch = auth_client.patch(f'/api/transactions/{t2.id}/', {'amount': '999.99'})
+    response_patch = auth_client.patch(
+        f"/api/transactions/{t2.id}/", {"amount": "999.99"}
+    )
     assert response_patch.status_code == 404
-    
+
     # Пытаемся удалить чужую транзакцию
-    response_delete = auth_client.delete(f'/api/transactions/{t2.id}/')
+    response_delete = auth_client.delete(f"/api/transactions/{t2.id}/")
     assert response_delete.status_code == 404
-    
+
     # Проверяем, что транзакция не изменилась и не удалилась
     t2.refresh_from_db()
     assert t2.amount == 100
     assert Transaction.objects.filter(id=t2.id).exists()
-
 
 
 @pytest.mark.django_db
@@ -182,7 +183,7 @@ def test_unique_category_per_user(user):
     """
     # Создаем первую категорию
     Category.objects.create(name="Food", owner=user)
-    
+
     # Пытаемся создать вторую с тем же именем и владельцем
     with pytest.raises(IntegrityError):
         Category.objects.create(name="Food", owner=user)
@@ -190,32 +191,40 @@ def test_unique_category_per_user(user):
 
 @pytest.mark.django_db
 def test_user_cannot_edit_other_users_transaction(client, user):
-    User = get_user_model() # 1. Создаем второго пользователя и его транзакцию
-    user2 = User.objects.create_user(username='user2', password='password2')
+    User = get_user_model()  # 1. Создаем второго пользователя и его транзакцию
+    user2 = User.objects.create_user(username="user2", password="password2")
     cat2 = Category.objects.create(name="Food", owner=user2)
 
     t2 = Transaction.objects.create(
-        type='income', amount=100, category=cat2, owner=user2, date='2026-11-02'
+        type="income", amount=100, category=cat2, owner=user2, date="2026-11-02"
     )
-    client.force_login(user)                       # 2. Логинимся под ПЕРВЫМ пользователем
-    
-    response = client.get(f'/edit/{t2.id}/')        # 3. Пытаемся открыть страницу редактирования чужой транзакции   
-    assert response.status_code == 404               # 4. Должна быть 404 (Not Found)
-    
-    response_delete = client.get(f'/delete/{t2.id}/') # 5. Пытаемся удалить чужую транзакцию
+    client.force_login(user)  # 2. Логинимся под ПЕРВЫМ пользователем
+
+    response = client.get(
+        f"/edit/{t2.id}/"
+    )  # 3. Пытаемся открыть страницу редактирования чужой транзакции
+    assert response.status_code == 404  # 4. Должна быть 404 (Not Found)
+
+    response_delete = client.get(
+        f"/delete/{t2.id}/"
+    )  # 5. Пытаемся удалить чужую транзакцию
     assert response_delete.status_code == 404
+
 
 @pytest.mark.django_db
 def test_user_can_edit_own_transaction(client, user):
-    cat = Category.objects.create(name="Food", owner=user) # Создаем свою транзакцию
+    cat = Category.objects.create(name="Food", owner=user)  # Создаем свою транзакцию
 
     t1 = Transaction.objects.create(
-        type='income', amount=100, category=cat, owner=user, date='2026-11-02'
+        type="income", amount=100, category=cat, owner=user, date="2026-11-02"
     )
     client.force_login(user)
 
-    response = client.get(f'/edit/{t1.id}/')               # Открываем свою транзакцию — должна быть 200 (OK)
+    response = client.get(
+        f"/edit/{t1.id}/"
+    )  # Открываем свою транзакцию — должна быть 200 (OK)
     assert response.status_code == 200
+
 
 @pytest.mark.django_db
 def test_main_page_requires_login(client):
@@ -223,12 +232,12 @@ def test_main_page_requires_login(client):
     Проверяет, что неавторизованный пользователь не может попасть на главную страницу
     и перенаправляется на страницу входа.
     """
-    response = client.get('/')
-    
+    response = client.get("/")
+
     # Ожидаем редирект (302)
     assert response.status_code == 302
     # Проверяем, что редирект ведет именно на страницу логина
-    assert '/accounts/login/' in response.url
+    assert "/accounts/login/" in response.url
 
 
 @pytest.mark.django_db
@@ -237,29 +246,34 @@ def test_user_sees_only_own_transactions_on_main_page(client, user):
     Проверяет, что на главной странице пользователь видит только свои транзакции.
     """
     User = get_user_model()
-    user2 = User.objects.create_user(username='user2', password='password2')
-    
+    user2 = User.objects.create_user(username="user2", password="password2")
+
     # Создаем транзакции для обоих пользователей
     cat1 = Category.objects.create(name="Food", owner=user)
     cat2 = Category.objects.create(name="Transport", owner=user2)
-    
-    t1 = Transaction.objects.create(type='income', amount=100, category=cat1, owner=user, date='2026-11-02')
-    Transaction.objects.create(type='expense', amount=50, category=cat2, owner=user2, date='2026-11-02')
-    
+
+    t1 = Transaction.objects.create(
+        type="income", amount=100, category=cat1, owner=user, date="2026-11-02"
+    )
+    Transaction.objects.create(
+        type="expense", amount=50, category=cat2, owner=user2, date="2026-11-02"
+    )
+
     # Логинимся под ПЕРВЫМ пользователем
     client.force_login(user)
-    
+
     # Запрашиваем главную страницу
-    response = client.get('/')
-    
+    response = client.get("/")
+
     # Проверяем, что страница открылась успешно
     assert response.status_code == 200
-    
+
     # Проверяем, что в контексте шаблона (в списке transactions) только 1 транзакция
-    assert len(response.context['transactions']) == 1
-    
+    assert len(response.context["transactions"]) == 1
+
     # Проверяем, что это именно транзакция первого пользователя
-    assert response.context['transactions'][0].id == t1.id
+    assert response.context["transactions"][0].id == t1.id
+
 
 @pytest.mark.django_db
 def test_create_transaction_with_new_category(client, user):
@@ -267,25 +281,29 @@ def test_create_transaction_with_new_category(client, user):
     Проверяет, что при вводе новой категории она создается и привязывается к транзакции.
     """
     client.force_login(user)
-    
-    response = client.post('/add/', {
-        'type': 'expense',
-        'amount': '150.00',
-        'new_category': 'Кофе', # <-- Вводим новую категорию
-        'date': '2026-11-05',
-        'description': 'Утренний кофе'
-    })
-    
+
+    response = client.post(
+        "/add/",
+        {
+            "type": "expense",
+            "amount": "150.00",
+            "new_category": "Кофе",  # <-- Вводим новую категорию
+            "date": "2026-11-05",
+            "description": "Утренний кофе",
+        },
+    )
+
     # Проверяем редирект на главную после успешного сохранения
     assert response.status_code == 302
-    
+
     # Проверяем, что категория создалась
-    category = Category.objects.get(owner=user, name='Кофе')
+    category = Category.objects.get(owner=user, name="Кофе")
     assert category is not None
-    
+
     # Проверяем, что транзакция привязалась к этой категории
     transaction = Transaction.objects.get(owner=user, amount=150)
     assert transaction.category == category
+
 
 @pytest.mark.django_db
 def test_main_page_filters_by_month(client, user):
@@ -293,51 +311,94 @@ def test_main_page_filters_by_month(client, user):
     Проверяет, что главная страница по умолчанию показывает только текущий месяц.
     """
     cat = Category.objects.create(name="Food", owner=user)
-    
+
     # Используем переменные с другими именами, чтобы не затенять класс date
     today_dt = date.today()
-    
+
     # Транзакция в текущем месяце (сегодня)
     t_current = Transaction.objects.create(
-        type='income', amount=100, category=cat, owner=user, date=today_dt
+        type="income", amount=100, category=cat, owner=user, date=today_dt
     )
-    
+
     # Транзакция в прошлом месяце (первое число прошлого месяца минус 1 день = последний день предыдущего)
-    prev_month_dt = (today_dt.replace(day=1) - timedelta(days=1))
-    
+    prev_month_dt = today_dt.replace(day=1) - timedelta(days=1)
+
     t_prev = Transaction.objects.create(
-        type='income', amount=50, category=cat, owner=user, date=prev_month_dt
+        type="income", amount=50, category=cat, owner=user, date=prev_month_dt
     )
-    
+
     client.force_login(user)
-    
+
     # По умолчанию (без параметра month) видим только текущий месяц
-    response = client.get('/')
-    assert len(response.context['transactions']) == 1
-    assert response.context['transactions'][0].id == t_current.id
-    
+    response = client.get("/")
+    assert len(response.context["transactions"]) == 1
+    assert response.context["transactions"][0].id == t_current.id
+
     # Запрашиваем прошлый месяц явно
     response_prev = client.get(f'/?month={prev_month_dt.strftime("%Y-%m")}')
-    assert len(response_prev.context['transactions']) == 1
-    assert response_prev.context['transactions'][0].id == t_prev.id
+    assert len(response_prev.context["transactions"]) == 1
+    assert response_prev.context["transactions"][0].id == t_prev.id
+
 
 @pytest.mark.django_db
 def test_monthly_totals_calculation(client, user):
     cat = Category.objects.create(name="Food", owner=user)
-    
+
     # Создаем транзакции в текущем месяце
     today = date.today()
-    Transaction.objects.create(type='income', amount=1000, category=cat, owner=user, date=today)
-    Transaction.objects.create(type='income', amount=500, category=cat, owner=user, date=today)
-    Transaction.objects.create(type='expense', amount=300, category=cat, owner=user, date=today)
-    
+    Transaction.objects.create(
+        type="income", amount=1000, category=cat, owner=user, date=today
+    )
+    Transaction.objects.create(
+        type="income", amount=500, category=cat, owner=user, date=today
+    )
+    Transaction.objects.create(
+        type="expense", amount=300, category=cat, owner=user, date=today
+    )
+
     # Транзакция в прошлом месяце (не должна попасть в текущий подсчет)
     prev_month = today.replace(day=1) - timedelta(days=1)
-    Transaction.objects.create(type='expense', amount=9999, category=cat, owner=user, date=prev_month)
-    
+    Transaction.objects.create(
+        type="expense", amount=9999, category=cat, owner=user, date=prev_month
+    )
+
     client.force_login(user)
-    response = client.get('/')
-    
-    assert response.context['total_income'] == 1500
-    assert response.context['total_expense'] == 300
-    assert response.context['balance'] == 1200
+    response = client.get("/")
+
+    assert response.context["total_income"] == 1500
+    assert response.context["total_expense"] == 300
+    assert response.context["balance"] == 1200
+
+
+@pytest.mark.django_db
+def test_category_response_does_not_expose_owner(auth_client, user):
+    """API не должен отдавать owner в ответе (утечка внутреннего ID)."""
+    category = Category.objects.create(name="Food", owner=user)
+
+    response = auth_client.get(f"/api/categories/{category.id}/")
+
+    assert response.status_code == 200
+    assert "owner" not in response.data
+    assert response.data["name"] == "Food"
+
+
+@pytest.mark.django_db
+def test_create_transaction_with_whitespace_category(client, user):
+    """Проверяет, что категория из одних пробелов не создается."""
+    client.force_login(user)
+
+    response = client.post(
+        "/add/",
+        {
+            "type": "expense",
+            "amount": "100.00",
+            "new_category": "   ",  # Только пробелы
+            "date": "2026-11-05",
+            "description": "Test",
+        },
+    )
+
+    # Форма должна вернуть 200 (ошибка валидации), а не 302 (редирект)
+    assert response.status_code == 200
+    # В базе не должно быть пустых категорий
+    assert not Category.objects.filter(name="").exists()

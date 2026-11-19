@@ -5,7 +5,7 @@ import multiprocessing
 bind = "0.0.0.0:8000"
 
 # Количество воркеров: (2 * ядра) + 1.
-workers = multiprocessing.cpu_count() * 2 + 1
+workers = min(multiprocessing.cpu_count() * 2 + 1, 4)
 
 # Таймаут: если воркер не ответил за 30 секунд, Gunicorn его убьет.
 timeout = 30

@@ -1,6 +1,9 @@
 # Игнорируем RUF012 для Django-моделей, так как там списки - это норма
 [tool.ruff.lint]   
-ignore = ["RUF012"]
+ignore = [
+    "RUF012", # Django-модели
+    "F403",   # from .base import * (стандарт для Django settings)
+]
 
 
 

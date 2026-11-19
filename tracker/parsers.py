@@ -5,15 +5,16 @@
 список словарей (транзакций в "сыром" виде). Celery-задача потом
 сохраняет их в БД.
 """
+
 import csv
 from abc import ABC, abstractmethod
 
-# класс для работы с датой и временем. 
-#Нужен, чтобы преобразовать строку "2026-11-01" в объект date
+# класс для работы с датой и временем.
+# Нужен, чтобы преобразовать строку "2026-11-01" в объект date
 from datetime import datetime
 
-# обертка для бинарного файла, которая превращает его в текстовый. 
-#Нужна, потому что default_storage.open(file_name, 'rb') открывает файл в бинарном режиме, 
+# обертка для бинарного файла, которая превращает его в текстовый.
+# Нужна, потому что default_storage.open(file_name, 'rb') открывает файл в бинарном режиме,
 # а csv.DictReader требует текстовый.
 from io import TextIOWrapper
 
@@ -57,22 +58,27 @@ class GenericCSVParser(BaseStatementParser):
         Создаём новый словарь используя словарь данный итератором.
         return transactions - этот список потом попадает в import_csv_task
         """
-        data_set = TextIOWrapper(file, encoding='utf-8')
+        data_set = TextIOWrapper(file, encoding="utf-8")
         reader = csv.DictReader(data_set)
         transactions = []
 
         for row in reader:
+            date_error = False
             try:
-                date_obj = datetime.strptime(row['date'], '%Y-%m-%d').date()
+                date_obj = datetime.strptime(row["date"], "%Y-%m-%d").date()
             except (ValueError, KeyError):
                 date_obj = datetime.now().date()
+                date_error = True
 
-            transactions.append({
-                'type': row.get('type', 'expense'),
-                'amount': row.get('amount', '0'),
-                'category': row.get('category', '').strip(),
-                'date': date_obj,
-                'description': row.get('description', ''),
-            })
+            transactions.append(
+                {
+                    "type": row.get("type", "expense"),
+                    "amount": row.get("amount", "0"),
+                    "category": row.get("category", "").strip(),
+                    "date": date_obj,
+                    "description": row.get("description", ""),
+                    "date_error": date_error,
+                }
+            )
 
         return transactions
