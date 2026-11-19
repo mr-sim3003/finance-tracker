@@ -59,8 +59,9 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('tracker:transaction_list')
 
     def get_queryset(self):
-        # Защита от IDOR. пользователь может редактировать только свои транзакции.
-        # Без этого filter(owner=...) любой мог бы открыть /edit/<чужой_id>/ и увидеть/изменить чужие данные.
+        """  Защита от IDOR. пользователь может редактировать только свои транзакции.
+        Без этого filter(owner=...) любой мог бы открыть /edit/<чужой_id>/ и увидеть/изменить чужие данные.
+        """
         return Transaction.objects.filter(owner=self.request.user)
 
     def get_form_kwargs(self):
@@ -92,7 +93,7 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
 
     def form_valid(self, form):
         messages.success(self.request, 'Транзакция удалена.')
-        return super().form_valid(form)
+        return super().form_valid(form) # type: ignore
 
 
 class TransactionListView(LoginRequiredMixin, ListView):
@@ -107,7 +108,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
     model = Transaction
     template_name = 'tracker/transaction_list.html'
     context_object_name = 'transactions'
-    paginate_by = 15
+    paginate_by = 10
 
     def get_queryset(self):
         # 1. Определяем месяц: из GET-параметра или текущий.

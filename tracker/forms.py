@@ -28,15 +28,23 @@ class TransactionForm(forms.ModelForm):
             'description': forms.TextInput(attrs={'placeholder': 'Необязательно'}),
         }
 
-    def __init__(self, *args, **kwargs):                          # __init__ — это ключевой момент. Мы передаем user в форму (из View), чтобы показать только его категории. Иначе он увидел бы категории других пользователей.
+    def __init__(self, *args, **kwargs):                          
+        # Мы передаем user в форму (из View), чтобы показать только его категории. 
+        # Иначе он увидел бы категории других пользователей.
         # Передаем user, чтобы отфильтровать категории только текущего пользователя.
-        self.user = kwargs.pop('user', None)                                                # <--- Забираем пользователя из аргументов
-        super().__init__(*args, **kwargs)                                  # widgets — мы говорим Django, что date должно быть полем с календарем (type="date"), а description — текстовым полем с подсказкой.
+        self.user = kwargs.pop('user', None)                                                
+        
+        super().__init__(*args, **kwargs)
+        # Забираем пользователя из аргументов
+        # widgets — мы говорим Django, что date должно быть полем с календарем (type="date"),
+        #  а description — текстовым полем с подсказкой.
         # Делаем поле category необязательным на уровне HTML валидации, 
         # так как пользователь может выбрать "создать новую"
         self.fields['category'].required = False
         if self.user:
-            self.fields['category'].queryset = Category.objects.filter(owner=self.user)    # Показываем только категории текущего пользователя
+            # Показываем только категории текущего пользователя
+            self.fields['category'].queryset = Category.objects.filter(owner=self.user)  # type: ignore
+            
 
     def clean_amount(self):
         amount = self.cleaned_data.get('amount')

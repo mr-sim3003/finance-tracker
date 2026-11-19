@@ -25,4 +25,4 @@ COPY . /app/
 EXPOSE 8000
 
 # Дефолтная команда: запуск Gunicorn
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "config.wsgi:application", "-c", "deploy/gunicorn.conf.py"]

@@ -48,3 +48,18 @@ class DeleteAccountForm(forms.Form):
         if self.user and not self.user.check_password(password):
             raise forms.ValidationError("Неверный пароль.")
         return password
+
+class UserProfileForm(forms.ModelForm):
+    """Форма для редактирования имени пользователя и email."""
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'email')
+        widgets = {
+            'username': forms.TextInput(attrs={'placeholder': 'Имя пользователя'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'Email'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Делаем email необязательным (как в модели CustomUser)
+        self.fields['email'].required = False

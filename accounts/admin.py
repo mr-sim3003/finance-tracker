@@ -20,7 +20,3 @@ class CustomUserAdmin(UserAdmin):
     
     fieldsets = UserAdmin.fieldsets
     add_fieldsets = UserAdmin.add_fieldsets
-
-    # Поля, которые можно редактировать в форме пользователя
-    # стандартные поля Django (username, password, email, permissions)
-    # поля при создании нового пользователя

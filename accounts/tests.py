@@ -46,16 +46,17 @@ def test_register_password_mismatch(client):
     assert not get_user_model().objects.filter(username='newuser').exists()
 
 @pytest.mark.django_db
-def test_admin_can_see_users(client):
+def test_admin_can_see_users(client, user):  # <--- добавляем user
     """Проверяет, что админка доступна только суперпользователю."""
     
-    client.login(username='testuser', password='testpassword')  # из фикстуры user # Обычный пользователь не может зайти в админку
+    # 1. Обычный пользователь не может зайти в админку
+    client.login(username='testuser', password='testpassword')
     response = client.get('/admin/')
-    assert response.status_code == 302                                    # редирект на логин админки
+    assert response.status_code == 302  # редирект на логин админки
 
-    
-    User = get_user_model()                                        # Суперпользователь может
-    User.objects.create_superuser(username='admin2', password='adminpass')
+    # 2. Суперпользователь может
+    User = get_user_model()
+    User.objects.create_superuser(username='admin2', password='adminpass') # type: ignore
     client.login(username='admin2', password='adminpass')
     response = client.get('/admin/')
     assert response.status_code == 200
@@ -126,3 +127,17 @@ def test_delete_account_success(client, user):
     
     # Пользователь разлогинен
     assert '_auth_user_id' not in client.session
+
+@pytest.mark.django_db
+def test_profile_update(client, user):
+    """Проверяет, что пользователь может изменить свое имя и email."""
+    client.force_login(user)
+    response = client.post('/accounts/profile/edit/', {
+        'username': 'newname',
+        'email': 'new@example.com',
+    })
+    assert response.status_code == 302  # редирект в профиль
+    
+    user.refresh_from_db()
+    assert user.username == 'newname'
+    assert user.email == 'new@example.com'

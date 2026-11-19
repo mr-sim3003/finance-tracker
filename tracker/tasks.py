@@ -7,21 +7,20 @@
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.core.files.storage import default_storage
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 from .models import Category, ImportJob, Transaction
 from .parsers import GenericCSVParser
 
 User = get_user_model()
 
-# Декоратор @shared_task с настройками ретраев:
-# если БД упадет или файл временно недоступен — Celery попробует снова.
-@shared_task(                  #  @shared_task — декоратор, который говорит Celery, что это задача.
+
+@shared_task(
     autoretry_for=(Exception,),
-    retry_backoff=True,        # Экспоненциальная задержка между попытками
-    retry_backoff_max=600,     # Максимум 10 минут
-    retry_jitter=True,         # Случайный разброс, чтобы не бить БД одновременно
-    max_retries=3,             # Всего 3 попытки
+    retry_backoff=True,
+    retry_backoff_max=600,
+    retry_jitter=True,
+    max_retries=3,
 )
 def import_csv_task(job_id):
     try:
@@ -33,29 +32,36 @@ def import_csv_task(job_id):
         file_name = job.file_name
         
         with default_storage.open(file_name, 'rb') as f:
-            parser = GenericCSVParser()           # <--- создаём парсер
-            rows = parser.parse(f)                # <--- парсим в список словарей
+            parser = GenericCSVParser()
+            rows = parser.parse(f)
             created_count = 0
             skipped_count = 0
 
             for row in rows:
                 category_name = row['category']
+                # Пропускаем строки с пустой категорией
+                if not category_name:
+                    skipped_count += 1
+                    continue
+                
                 category, _ = Category.objects.get_or_create(owner=user, name=category_name)
                 try:
-                    Transaction.objects.create(
-                       owner=user,
-                       type=row['type'],
-                       amount=row['amount'],
-                       category=category,
-                       date=row['date'],
-                       description=row.get('description', '')
-                    )
+                    # Оборачиваем в atomic(), чтобы при IntegrityError
+                    # транзакция откатилась и следующая строка обработалась нормально
+                    with transaction.atomic():
+                        Transaction.objects.create(
+                            owner=user,
+                            type=row['type'],
+                            amount=row['amount'],
+                            category=category,
+                            date=row['date'],
+                            description=row.get('description', '')
+                        )
                     created_count += 1
                 except IntegrityError:
                     skipped_count += 1
                     continue
 
-        # Обновляем успешный результат
         job.status = 'done'
         job.created_count = created_count
         job.skipped_count = skipped_count
@@ -67,7 +73,6 @@ def import_csv_task(job_id):
     except ImportJob.DoesNotExist:
         return f'Ошибка: ImportJob {job_id} не найден'
     except Exception as e:
-        # Если задача упала фатально — обновляем статус и пробрасываем ошибку для retry
         try:
             job = ImportJob.objects.get(id=job_id)
             job.status = 'failed'

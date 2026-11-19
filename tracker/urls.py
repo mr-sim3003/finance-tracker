@@ -20,11 +20,11 @@ app_name = 'tracker'
 
 urlpatterns = [
     # Транзакции
-    path('', TransactionListView.as_view(), name='transaction_list'),
     path('add/', add_transaction, name='add_transaction'),
     path('edit/<int:pk>/', TransactionUpdateView.as_view(), name='transaction_edit'),
     path('delete/<int:pk>/', TransactionDeleteView.as_view(), name='transaction_delete'),
-
+    path('', TransactionListView.as_view(), name='transaction_list'),
+    
     # Импорт CSV
     path('upload-csv/', upload_csv, name='upload_csv'),
     path('import-jobs/', ImportJobListView.as_view(), name='import_job_list'),

@@ -7,7 +7,14 @@
 """
 import csv
 from abc import ABC, abstractmethod
+
+# класс для работы с датой и временем. 
+#Нужен, чтобы преобразовать строку "2026-11-01" в объект date
 from datetime import datetime
+
+# обертка для бинарного файла, которая превращает его в текстовый. 
+#Нужна, потому что default_storage.open(file_name, 'rb') открывает файл в бинарном режиме, 
+# а csv.DictReader требует текстовый.
 from io import TextIOWrapper
 
 
@@ -40,6 +47,16 @@ class GenericCSVParser(BaseStatementParser):
     """
 
     def parse(self, file) -> list[dict]:
+        """
+        TextIOWrapper декодирует из битов в str.
+        DictReader читает первую строку как заголовки (например, type,amount,category,date,description),
+        а каждую следующую строку превращает в словарь, где ключи — это заголовки, а значения — данные.
+        Парсинг строки даты в обьект, отбрасываем время оставляя дату.
+        Если парсинг не сработал ставим сегодняшную дату чтобы сразу увидеть в каких данных ошибка.
+        возможно лучше просто ValueError но если обьём даных небольшой можно потом отредактировать вручную.
+        Создаём новый словарь используя словарь данный итератором.
+        return transactions - этот список потом попадает в import_csv_task
+        """
         data_set = TextIOWrapper(file, encoding='utf-8')
         reader = csv.DictReader(data_set)
         transactions = []

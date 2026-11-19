@@ -1,3 +1,6 @@
+"""
+Конфигурация Celery для асинхронных задач.
+"""
 import os
 
 from celery import Celery

@@ -1,13 +1,18 @@
 """
 Views приложения accounts.
 
-Обрабатывает регистрацию, просмотр профиля и удаление аккаунта.
+Обрабатывает регистрацию, просмотр профиля, редактирование и удаление аккаунта.(CRUD)
 """
+from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
+from django.views.generic import UpdateView
 
-from .forms import CustomUserCreationForm, DeleteAccountForm
+from .forms import CustomUserCreationForm, DeleteAccountForm, UserProfileForm
+from .models import CustomUser
 
 
 def register(request):
@@ -53,3 +58,25 @@ def delete_account(request):
         form = DeleteAccountForm(user=request.user)
 
     return render(request, 'registration/delete_account.html', {'form': form})
+
+class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
+    """
+    Редактирование имени пользователя и email.
+    
+    Используем UpdateView, так как это стандартный кейс: 
+    форма + сохранение + редирект. Переопределяем только get_object,
+    чтобы всегда брать текущего пользователя (защита от IDOR).
+    """
+    model = CustomUser
+    form_class = UserProfileForm
+    template_name = 'registration/profile_edit.html'
+    success_url = reverse_lazy('accounts:profile')
+
+    def get_object(self, queryset=None):
+        # Возвращаем именно текущего пользователя, 
+        # чтобы нельзя было через URL поменять чужой профиль (защита от IDOR).
+        return self.request.user
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Профиль успешно обновлен.')
+        return super().form_valid(form)

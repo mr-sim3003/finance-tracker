@@ -6,7 +6,7 @@ app_name='accounts' создает namespace, чтобы URL-ы не конфл�
 """
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
-
+from .views import delete_account, profile, register, UserProfileUpdateView
 from .views import delete_account, profile, register
 
 app_name = 'accounts'
@@ -30,6 +30,9 @@ urlpatterns = [
         auth_views.PasswordChangeDoneView.as_view(), 
         name='password_change_done'
     ),
+    #Смена имени или email
+    path('profile/', profile, name='profile'),
+    path('profile/edit/', UserProfileUpdateView.as_view(), name='profile_edit'),
 
     # Удаление аккаунта
     path('delete/', delete_account, name='delete_account'),
@@ -39,4 +42,5 @@ urlpatterns = [
     # после логаута редиректим в приложение tracker, а не в «какое-то» приложение.
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='tracker:transaction_list'), name='logout'),
+
 ]
