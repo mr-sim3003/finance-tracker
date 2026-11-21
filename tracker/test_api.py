@@ -335,7 +335,7 @@ def test_main_page_filters_by_month(client, user):
     assert response.context["transactions"][0].id == t_current.id
 
     # Запрашиваем прошлый месяц явно
-    response_prev = client.get(f'/?month={prev_month_dt.strftime("%Y-%m")}')
+    response_prev = client.get(f"/?month={prev_month_dt.strftime('%Y-%m')}")
     assert len(response_prev.context["transactions"]) == 1
     assert response_prev.context["transactions"][0].id == t_prev.id
 

@@ -10,7 +10,7 @@ def main():
     # setdefault() задает значение только если переменная еще не задана.
     # В Docker Compose (.env) передается DJANGO_SETTINGS_MODULE=config.settings.prod,
     # поэтому в контейнере используется prod, а локально (без Docker) — local.
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
 
     try:
         from django.core.management import execute_from_command_line
@@ -23,5 +23,5 @@ def main():
     execute_from_command_line(sys.argv)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

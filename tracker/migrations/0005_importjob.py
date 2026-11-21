@@ -6,30 +6,70 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('tracker', '0004_transaction_tracker_tra_owner_i_4070dd_idx'),
+        ("tracker", "0004_transaction_tracker_tra_owner_i_4070dd_idx"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ImportJob',
+            name="ImportJob",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file_name', models.CharField(max_length=255, verbose_name='File name')),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('processing', 'Processing'), ('done', 'Done'), ('failed', 'Failed')], default='pending', max_length=20, verbose_name='Status')),
-                ('created_count', models.IntegerField(default=0, verbose_name='Created')),
-                ('skipped_count', models.IntegerField(default=0, verbose_name='Skipped')),
-                ('error_message', models.TextField(blank=True, verbose_name='Error message')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='import_jobs', to=settings.AUTH_USER_MODEL, verbose_name='User')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "file_name",
+                    models.CharField(max_length=255, verbose_name="File name"),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("processing", "Processing"),
+                            ("done", "Done"),
+                            ("failed", "Failed"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                        verbose_name="Status",
+                    ),
+                ),
+                (
+                    "created_count",
+                    models.IntegerField(default=0, verbose_name="Created"),
+                ),
+                (
+                    "skipped_count",
+                    models.IntegerField(default=0, verbose_name="Skipped"),
+                ),
+                (
+                    "error_message",
+                    models.TextField(blank=True, verbose_name="Error message"),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="import_jobs",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="User",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Import Job',
-                'verbose_name_plural': 'Import Jobs',
-                'ordering': ['-created_at'],
+                "verbose_name": "Import Job",
+                "verbose_name_plural": "Import Jobs",
+                "ordering": ["-created_at"],
             },
         ),
     ]

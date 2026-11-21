@@ -108,8 +108,7 @@ def test_import_task_is_idempotent_on_retry(user):
     не должен менять счётчики и не должен падать.
     """
     csv_content = (
-        b"type,amount,category,date,description\n"
-        b"expense,150.50,Food,2026-11-01,Lunch\n"
+        b"type,amount,category,date,description\nexpense,150.50,Food,2026-11-01,Lunch\n"
     )
     csv_file = SimpleUploadedFile("retry.csv", csv_content, content_type="text/csv")
     file_name = default_storage.save("retry.csv", csv_file)

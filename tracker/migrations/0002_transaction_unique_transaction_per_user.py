@@ -5,15 +5,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('tracker', '0001_initial'),
+        ("tracker", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='transaction',
-            constraint=models.UniqueConstraint(fields=('owner', 'date', 'amount', 'type', 'description'), name='unique_transaction_per_user'),
+            model_name="transaction",
+            constraint=models.UniqueConstraint(
+                fields=("owner", "date", "amount", "type", "description"),
+                name="unique_transaction_per_user",
+            ),
         ),
     ]

@@ -3,6 +3,7 @@
 
 Описывает основные бизнес-сущности: Категория, Транзакция и Задача импорта.
 """
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -10,104 +11,98 @@ from django.utils import timezone
 
 class Category(models.Model):
     """Категория транзакции (например, 'Еда' или 'Зарплата')."""
-    name = models.CharField(max_length=100, verbose_name="Name") # verbose_name — это название для админки.
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,                  # ссылка на кастомного пользователя
-        on_delete=models.CASCADE,                  # если пользователя удалят, все его категории тоже удалятся.
-        related_name='categories',                 # связанное имя. позволяет из пользователя достать его категории: user.categories.all(). Без этого было бы user.category_set.all()
-        verbose_name="Owner"                       # verbose_name — это название для админки (человеческое).
-    )                                              # Поле owner — связь «многие к одному» (FK). Один пользователь может иметь много категорий.
 
-    class Meta:                                    # Названия таблицы, поля фильтрации, индексы. Hастройки модели, которые не создают колонок в БД.
-        verbose_name = "Category"                  # как модель называется в админке (в единственном и множественном числе).
-        verbose_name_plural = "Categories"         # как модель называется в админке (в единственном и множественном числе).
-        # У одного пользователя не может быть двух одинаковых категорий.
-        constraints = [                                                                         # Это шов на уровне БД. UniqueConstraint запрещает дубликаты.
-            models.UniqueConstraint(fields=['owner', 'name'], name='unique_category_per_user')  # Но не просто «уникальное имя», а уникальная пара (owner + name). 
-        ]                                                                                       # То есть у одного пользователя не может быть двух категорий «Food», но у разных пользователей — может.
+    name = models.CharField(max_length=100, verbose_name="Name")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="categories",
+        verbose_name="Owner",
+    )
+
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "name"], name="unique_category_per_user"
+            )
+        ]
 
     def __str__(self):
         return self.name
 
 
-class Transaction(models.Model): 
-    """Финансовая операция (доход или расход)."""    
-    #Django автоматически создаст метод get_type_display(), который мы используем в шаблонах.         
-    TYPE_CHOICES = [                            # чтобы ограничить возможные значения (только income или expense).
-        ('income', 'Income'),                   # Константа TYPE_CHOICES — список кортежей. Она нужна для поля type, 
-        ('expense', 'Expense'),                 #(значение_в_БД, человекочитаемое_имя)
+class Transaction(models.Model):
+    """Финансовая операция (доход или расход).
+    Django автоматически создаст метод get_type_display(), который мы используем в шаблонах.
+    Константа TYPE_CHOICES — список кортежей. Она нужна для поля type, (значение_в_БД, человекочитаемое_имя)
+    """
+
+    TYPE_CHOICES = [
+        ("income", "Income"),
+        ("expense", "Expense"),
     ]
-    amount = models.DecimalField(
-        max_digits=12, 
-        decimal_places=2, 
-        verbose_name="Amount"
-    )                                                        # Шов 2: Decimal для денег (не float!)
-    type = models.CharField(                                 # Поле type — строка. Но благодаря choices=TYPE_CHOICES, 
-        max_length=10,                                       # Django будет проверять, что значение входит в список (income/expense). 
-        choices=TYPE_CHOICES,                                # В БД хранится income/expense, а в админке и в get_type_display() — «Income»/«Expense».
-        verbose_name="Type"
-    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Amount")
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES, verbose_name="Type")
     category = models.ForeignKey(
-        Category, 
-        on_delete=models.PROTECT,                          # Это защита. Если попытаться удалить категорию, в которой есть транзакции, база данных запретит это (выбросит ProtectedError). Мы не хотим терять финансовые данные.
-        related_name='transactions',                       # из категории можно достать её транзакции: category.transactions.all().
-        verbose_name="Category"
-    )                                                      # Шов 3: Категория как FK, а не строка
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
-        related_name='transactions',
-        verbose_name="Owner"
+        Category,
+        on_delete=models.PROTECT,
+        related_name="transactions",
+        verbose_name="Category",
     )
-                                                                                          # Шов 4: owner через настройку, а не auth.User. Поле owner — FK на пользователя.
-    #создает индекс в БД на колонку date. Это критически важно для производительности, потому что мы часто фильтруем по месяцу (date__gte, date__lte). Без индекса каждый запрос сканировал бы всю таблицу.
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="transactions",
+        verbose_name="Owner",
+    )
     date = models.DateField(default=timezone.now, verbose_name="Date", db_index=True)
-    description = models.CharField(max_length=255, blank=True, verbose_name="Description") # description — описание. blank=True означает, что поле необязательное (может быть пустым).
+    description = models.CharField(
+        max_length=255, blank=True, verbose_name="Description"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:                                                   #Названия таблицы, поля фильтрации, индексы.
-        verbose_name = "Transaction"                              # Название таблицы
-        verbose_name_plural = "Transactions"                      # Название таблицы
-        ordering = ['-date', '-created_at']
+    class Meta:
+        verbose_name = "Transaction"
+        verbose_name_plural = "Transactions"
+        ordering = ["-date", "-created_at"]
         indexes = [
-        models.Index(fields=['owner', 'date']),                    
-        ]                                                         # По умолчанию: сначала новые
-        constraints = [                                            #  Защита от дублей при импорте
+            models.Index(fields=["owner", "date"]),
+        ]
+        constraints = [
             models.UniqueConstraint(
-                fields=['owner', 'date', 'amount', 'type', 'description'],
-                name='unique_transaction_per_user'
+                fields=["owner", "date", "amount", "type", "description"],
+                name="unique_transaction_per_user",
             )
         ]
+
     def __str__(self):
-        return f"{self.get_type_display()} {self.amount} ({self.date})" # type: ignore
+        return f"{self.get_type_display()} {self.amount} ({self.date})"  # type: ignore
 
 
-
-# self.get_type_display() — Для поля с choices Django автоматически создаёт метод get_<field_name>_display(), 
+# self.get_type_display() — Для поля с choices Django автоматически создаёт метод get_<field_name>_display(),
 # который возвращает человеческое название выбранного варианта (например, Income вместо income).
-
 # self.get_type_display() Метод возвращает строку вида: Income 100.00 (2026-11-05).
+
 
 class ImportJob(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('done', 'Done'),
-        ('failed', 'Failed'),
+        ("pending", "Pending"),
+        ("processing", "Processing"),
+        ("done", "Done"),
+        ("failed", "Failed"),
     ]
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='import_jobs',
-        verbose_name="User"
+        related_name="import_jobs",
+        verbose_name="User",
     )
     file_name = models.CharField(max_length=255, verbose_name="File name")
     status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='pending',
-        verbose_name="Status"
+        max_length=20, choices=STATUS_CHOICES, default="pending", verbose_name="Status"
     )
     created_count = models.IntegerField(default=0, verbose_name="Created")
     skipped_count = models.IntegerField(default=0, verbose_name="Skipped")
@@ -116,7 +111,7 @@ class ImportJob(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
         verbose_name = "Import Job"
         verbose_name_plural = "Import Jobs"
 

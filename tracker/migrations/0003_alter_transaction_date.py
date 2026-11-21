@@ -5,15 +5,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('tracker', '0002_transaction_unique_transaction_per_user'),
+        ("tracker", "0002_transaction_unique_transaction_per_user"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='transaction',
-            name='date',
-            field=models.DateField(db_index=True, default=django.utils.timezone.now, verbose_name='Date'),
+            model_name="transaction",
+            name="date",
+            field=models.DateField(
+                db_index=True, default=django.utils.timezone.now, verbose_name="Date"
+            ),
         ),
     ]

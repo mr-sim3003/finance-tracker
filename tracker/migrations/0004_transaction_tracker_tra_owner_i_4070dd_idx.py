@@ -5,15 +5,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('tracker', '0003_alter_transaction_date'),
+        ("tracker", "0003_alter_transaction_date"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='transaction',
-            index=models.Index(fields=['owner', 'date'], name='tracker_tra_owner_i_4070dd_idx'),
+            model_name="transaction",
+            index=models.Index(
+                fields=["owner", "date"], name="tracker_tra_owner_i_4070dd_idx"
+            ),
         ),
     ]

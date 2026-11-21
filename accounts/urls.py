@@ -17,7 +17,6 @@ urlpatterns = [
     path("register/", register, name="register"),
     path("profile/", profile, name="profile"),
     # Смена пароля (используем встроенные CBV Django).
-    # success_url указывает явно с namespace, иначе Django не найдет путь.
     path(
         "password-change/",
         auth_views.PasswordChangeView.as_view(
@@ -35,8 +34,6 @@ urlpatterns = [
     # Удаление аккаунта
     path("delete/", delete_account, name="delete_account"),
     # Логин / логаут.
-    # next_page='tracker:transaction_list' — namespace, а не просто имя:
-    # после логаута редиректим в приложение tracker, а не в «какое-то» приложение.
     path(
         "login/",
         auth_views.LoginView.as_view(template_name="registration/login.html"),
